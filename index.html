@@ -219,7 +219,6 @@
                     .single();
 
                 if (error && error.code === 'PGRST116') {
-                    // Якщо користувача немає в базі, створюємо з початковим балансом 0
                     const { data: newData, error: insertError } = await supabaseClient
                         .from('users')
                         .insert([{ telegram_id: telegramId, stars_balance: 0, last_case_open_time: 0 }])
@@ -299,7 +298,6 @@
             setTimeout(() => {
                 caseBox.classList.remove('open-anim');
                 
-                // Зважена випадковість
                 const rand = Math.random();
                 let cumulative = 0;
                 for (let drop of drops) {
@@ -335,19 +333,54 @@
         function openTopupModal() { document.getElementById('topupModal').style.display = 'flex'; }
         function closeTopupModal() { document.getElementById('topupModal').style.display = 'none'; }
 
-        function buyStars(amount) {
-            if (tg && tg.openInvoice) {
-                tg.openInvoice('mock_url', (status) => {
-                    balance += amount;
-                    closeTopupModal();
-                    saveUserData();
-                    updateUI();
-                });
-            } else {
-                balance += amount;
+        // Оновлена функція купівлі зірок через справжні Telegram Stars та Supabase Edge Function
+        async function buyStars(amount) {
+            try {
                 closeTopupModal();
-                saveUserData();
-                updateUI();
+                
+                const functionUrl = 'https://nlepgjjceiroonynqgoi.supabase.co/functions/v1/create-invoice';
+                
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        telegramId: telegramId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Помилка: " + data.error);
+                    return;
+                }
+
+                if (data.invoiceUrl && tg && tg.openInvoice) {
+                    tg.openInvoice(data.invoiceUrl, async (status) => {
+                        if (status === 'paid') {
+                            balance += amount;
+                            await saveUserData();
+                            updateUI();
+                            alert(`Успішно! +${amount} ⭐️ додано на ваш баланс.`);
+                        } else {
+                            alert("Оплату було скасовано.");
+                        }
+                    });
+                } else {
+                    // Режим тестування у звичайному браузері
+                    balance += amount;
+                    await saveUserData();
+                    updateUI();
+                    alert(`Тестове зарахування: +${amount} ⭐️`);
+                }
+
+            } catch (err) {
+                console.error("Помилка купівлі зірок:", err);
+                alert("Сталася помилка при створенні рахунку.");
             }
         }
 
@@ -362,7 +395,6 @@
 
         setInterval(updateUI, 1000);
         
-        // Запускаємо ініціалізацію бази даних при завантаженні сторінки
         initUser();
     </script>
 </body>
