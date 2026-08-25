@@ -185,8 +185,8 @@
         const tg = window.Telegram?.WebApp;
         if (tg) tg.expand();
 
-        // Отримуємо Telegram ID користувача (для тесту в браузері генерується випадковий ID)
-        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_" + Math.floor(Math.random() * 1000);
+        // Отримуємо реальний Telegram ID користувача
+        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_local";
 
         // Налаштування Supabase
         const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
@@ -194,7 +194,6 @@
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Ігрові дропи та ймовірності
         const drops = [
             { name: "Троянда", icon: "🌹", price: 25, chance: 0.40 },
             { name: "Homemade Cake", icon: "🍰", price: 35, chance: 0.25 },
@@ -209,51 +208,56 @@
         let currentDrop = null;
         let isDataLoaded = false;
 
-        // Завантаження даних користувача з Supabase
+        // Завантаження даних користувача з Supabase із гарантією створення запису
         async function initUser() {
             try {
                 let { data, error } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('telegram_id', telegramId)
-                    .single();
+                    .maybeSingle();
 
-                if (error && error.code === 'PGRST116') {
+                if (!data) {
+                    // Якщо користувача немає в базі, створюємо його
                     const { data: newData, error: insertError } = await supabaseClient
                         .from('users')
                         .insert([{ telegram_id: telegramId, stars_balance: 0, last_case_open_time: 0 }])
                         .select()
                         .single();
                     
-                    if (!insertError && newData) {
+                    if (newData) {
                         data = newData;
                     }
                 }
 
                 if (data) {
-                    balance = data.stars_balance || 0;
+                    balance = Number(data.stars_balance) || 0;
                     lastOpenTime = Number(data.last_case_open_time) || 0;
                 }
             } catch (err) {
-                console.error("Помилка підключення до Supabase:", err);
+                console.error("Помилка ініціалізації користувача:", err);
             } finally {
                 isDataLoaded = true;
                 updateUI();
             }
         }
 
-        // Функція для оновлення даних на сервері
+        // Надійне збереження даних у Supabase
         async function saveUserData() {
-            const { error } = await supabaseClient
-                .from('users')
-                .update({ 
-                    stars_balance: balance, 
-                    last_case_open_time: lastOpenTime 
-                })
-                .eq('telegram_id', telegramId);
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .upsert({ 
+                        telegram_id: telegramId,
+                        stars_balance: balance, 
+                        last_case_open_time: lastOpenTime 
+                    }, { onConflict: 'telegram_id' });
 
-            if (error) {
-                console.error("Помилка збереження в Supabase:", error);
+                if (error) {
+                    console.error("Помилка збереження в Supabase:", error);
+                }
+            } catch (err) {
+                console.error("Мережева помилка збереження:", err);
             }
         }
 
@@ -333,7 +337,6 @@
         function openTopupModal() { document.getElementById('topupModal').style.display = 'flex'; }
         function closeTopupModal() { document.getElementById('topupModal').style.display = 'none'; }
 
-        // Оновлена функція купівлі зірок через справжні Telegram Stars та Supabase Edge Function
         async function buyStars(amount) {
             try {
                 closeTopupModal();
@@ -371,7 +374,6 @@
                         }
                     });
                 } else {
-                    // Режим тестування у звичайному браузері
                     balance += amount;
                     await saveUserData();
                     updateUI();
