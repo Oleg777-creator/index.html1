@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Stars Case Opening</title>
+    <!-- Підключаємо Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #121214;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .balance-card {
+            background: #1c1c1e;
+            padding: 10px 18px;
+            border-radius: 20px;
+            border: 1px solid #2c2c2e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .btn-topup {
+            background: linear-gradient(135deg, #ffb703, #fb8500);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(251, 133, 0, 0.3);
+        }
+
+        .case-container {
+            width: 100%;
+            max-width: 320px;
+            background: #1c1c1e;
+            border-radius: 24px;
+            padding: 24px;
+            box-sizing: border-box;
+            text-align: center;
+            border: 1px solid #2c2c2e;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .case-box {
+            width: 140px;
+            height: 140px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #2a2a2e, #18181a);
+            border: 2px solid #ffb703;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            box-shadow: 0 0 20px rgba(255, 183, 3, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .case-box.open-anim {
+            animation: bounce 0.6s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .btn-action {
+            width: 100%;
+            background: linear-gradient(135deg, #007aff, #0056b3);
+            border: none;
+            color: #fff;
+            padding: 14px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-action:disabled {
+            background: #2c2c2e;
+            color: #8e8e93;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1c1c1e;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            border: 1px solid #2c2c2e;
+        }
+
+        .modal-btn {
+            background: #2c2c2e;
+            color: #fff;
+            border: 1px solid #3a3a3c;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 8px 0;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="balance-card">
+            <span>⭐️</span>
+            <span id="balance">0</span>
+        </div>
+        <button class="btn-topup" onclick="openTopupModal()">+ Поповнити</button>
+    </div>
+
+    <div class="case-container">
+        <h2>Безкоштовний кейс 🎁</h2>
+        <div class="case-box" id="caseBox">📦</div>
+        <p id="timerText" style="color: #8e8e93; font-size: 14px;"></p>
+        <button class="btn-action" id="openBtn" onclick="openCase()">Відкрити кейс</button>
+        <button class="btn-action" id="withdrawBtn" onclick="withdraw()" style="background: linear-gradient(135deg, #34c759, #248a3d); margin-top: 15px;">Вивести 1500 ⭐️</button>
+    </div>
+
+    <!-- Модальне вікно поповнення -->
+    <div class="modal" id="topupModal">
+        <div class="modal-content">
+            <h3>Поповнити Stars ⭐️</h3>
+            <button class="modal-btn" onclick="buyStars(100)">+100 ⭐️</button>
+            <button class="modal-btn" onclick="buyStars(500)">+500 ⭐️</button>
+            <button class="modal-btn" onclick="buyStars(1000)">+1000 ⭐️</button>
+            <button class="modal-btn" onclick="closeTopupModal()" style="background: transparent; border: none; color: #ff3b30;">Скасувати</button>
+        </div>
+    </div>
+
+    <!-- Модальне вікно виграшу -->
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <h3>Ваш виграш! 🎉</h3>
+            <div id="winIcon" style="font-size: 50px; margin: 10px 0;">🌹</div>
+            <p id="winName" style="font-weight: bold;"></p>
+            <button class="btn-action" id="sellBtn" onclick="sellItem()">Продати за ціною ⭐️</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) tg.expand();
+
+        // Ігрові дропи та ймовірності
+        const drops = [
+            { name: "Троянда", icon: "🌹", price: 25, chance: 0.40 },
+            { name: "Homemade Cake", icon: "🍰", price: 35, chance: 0.25 },
+            { name: "50 ігрових Stars", icon: "⭐️", price: 50, chance: 0.15 },
+            { name: "Ведмідь", icon: "🧸", price: 100, chance: 0.10 },
+            { name: "Jelly Bunny", icon: "🐰", price: 150, chance: 0.07 },
+            { name: "Snoop Dogg", icon: "🐕", price: 250, chance: 0.03 }
+        ];
+
+        let balance = parseInt(localStorage.getItem('stars_balance')) || 0;
+        let lastOpenTime = parseInt(localStorage.getItem('last_case_open_time')) || 0;
+        let currentDrop = null;
+
+        function updateUI() {
+            document.getElementById('balance').innerText = balance;
+            
+            const now = Date.now();
+            const cooldown = 24 * 60 * 60 * 1000; // 24 години
+            const timeLeft = cooldown - (now - lastOpenTime);
+
+            const openBtn = document.getElementById('openBtn');
+            const timerText = document.getElementById('timerText');
+
+            if (timeLeft > 0) {
+                openBtn.disabled = true;
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                timerText.innerText = `До наступного: ${hours}г ${minutes}хв`;
+            } else {
+                openBtn.disabled = false;
+                timerText.innerText = "Кейс готовий до відкриття!";
+            }
+
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            withdrawBtn.disabled = balance < 1500;
+        }
+
+        function openCase() {
+            const openBtn = document.getElementById('openBtn');
+            const caseBox = document.getElementById('caseBox');
+            
+            openBtn.disabled = true;
+            caseBox.classList.add('open-anim');
+
+            setTimeout(() => {
+                caseBox.classList.remove('open-anim');
+                
+                // Зважена випадковість
+                const rand = Math.random();
+                let cumulative = 0;
+                for (let drop of drops) {
+                    cumulative += drop.chance;
+                    if (rand <= cumulative) {
+                        currentDrop = drop;
+                        break;
+                    }
+                }
+
+                lastOpenTime = Date.now();
+                localStorage.setItem('last_case_open_time', lastOpenTime);
+
+                document.getElementById('winIcon').innerText = currentDrop.icon;
+                document.getElementById('winName').innerText = currentDrop.name;
+                document.getElementById('sellBtn').innerText = `Продати за ${currentDrop.price} ⭐️`;
+                document.getElementById('winModal').style.display = 'flex';
+
+                updateUI();
+            }, 1200);
+        }
+
+        function sellItem() {
+            if (currentDrop) {
+                balance += currentDrop.price;
+                localStorage.setItem('stars_balance', balance);
+                currentDrop = null;
+            }
+            document.getElementById('winModal').style.display = 'none';
+            updateUI();
+        }
+
+        function openTopupModal() { document.getElementById('topupModal').style.display = 'flex'; }
+        function closeTopupModal() { document.getElementById('topupModal').style.display = 'none'; }
+
+        function buyStars(amount) {
+            // Симуляція оновлення балансу через Telegram Stars
+            if (tg && tg.openInvoice) {
+                tg.openInvoice('mock_url', (status) => {
+                    balance += amount;
+                    localStorage.setItem('stars_balance', balance);
+                    closeTopupModal();
+                    updateUI();
+                });
+            } else {
+                balance += amount;
+                localStorage.setItem('stars_balance', balance);
+                closeTopupModal();
+                updateUI();
+            }
+        }
+
+        function withdraw() {
+            if (balance >= 1500) {
+                balance -= 1500;
+                localStorage.setItem('stars_balance', balance);
+                alert("Запит на виведення 1500 ⭐️ відправлено адміністратору!");
+                updateUI();
+            }
+        }
+
+        setInterval(updateUI, 1000);
+        updateUI();
+    </script>
+</body>
+</html>
