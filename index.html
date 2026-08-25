@@ -185,8 +185,21 @@
         const tg = window.Telegram?.WebApp;
         if (tg) tg.expand();
 
-        // Отримуємо реальний Telegram ID користувача
-        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_local";
+        // Стабільне визначення Telegram ID (щоб не генерувався новий при кожному вході)
+        let telegramId = "test_user_stable";
+        if (tg?.initDataUnsafe?.user?.id) {
+            telegramId = String(tg.initDataUnsafe.user.id);
+        } else {
+            // Якщо відкрили у звичайному браузері — зберігаємо в localStorage щоб ID не стрибав
+            let savedLocalId = localStorage.getItem('local_telegram_id');
+            if (!savedLocalId) {
+                savedLocalId = "browser_user_" + Math.floor(Math.random() * 100000);
+                localStorage.setItem('local_telegram_id', savedLocalId);
+            }
+            telegramId = savedLocalId;
+        }
+
+        console.log("Поточний Telegram ID користувача:", telegramId);
 
         // Налаштування Supabase
         const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
@@ -208,7 +221,7 @@
         let currentDrop = null;
         let isDataLoaded = false;
 
-        // Завантаження даних користувача з Supabase із гарантією створення запису
+        // Завантаження даних користувача з Supabase
         async function initUser() {
             try {
                 let { data, error } = await supabaseClient
@@ -217,14 +230,21 @@
                     .eq('telegram_id', telegramId)
                     .maybeSingle();
 
+                if (error) {
+                    console.error("Помилка читання з бази:", error);
+                }
+
                 if (!data) {
-                    // Якщо користувача немає в базі, створюємо його
+                    // Створюємо нового користувача в базі якщо його ще немає
                     const { data: newData, error: insertError } = await supabaseClient
                         .from('users')
                         .insert([{ telegram_id: telegramId, stars_balance: 0, last_case_open_time: 0 }])
                         .select()
                         .single();
                     
+                    if (insertError) {
+                        console.error("Помилка створення користувача:", insertError);
+                    }
                     if (newData) {
                         data = newData;
                     }
@@ -242,7 +262,7 @@
             }
         }
 
-        // Надійне збереження даних у Supabase
+        // Надійне збереження даних через upsert
         async function saveUserData() {
             try {
                 const { error } = await supabaseClient
@@ -255,6 +275,8 @@
 
                 if (error) {
                     console.error("Помилка збереження в Supabase:", error);
+                } else {
+                    console.log("Дані успішно збережені! Баланс:", balance);
                 }
             } catch (err) {
                 console.error("Мережева помилка збереження:", err);
@@ -299,7 +321,7 @@
             openBtn.disabled = true;
             caseBox.classList.add('open-anim');
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 caseBox.classList.remove('open-anim');
                 
                 const rand = Math.random();
@@ -319,18 +341,19 @@
                 document.getElementById('sellBtn').innerText = `Продати за ${currentDrop.price} ⭐️`;
                 document.getElementById('winModal').style.display = 'flex';
 
-                saveUserData();
+                await saveUserData();
                 updateUI();
             }, 1200);
         }
 
-        function sellItem() {
+        async function sellItem() {
             if (currentDrop) {
                 balance += currentDrop.price;
                 currentDrop = null;
             }
             document.getElementById('winModal').style.display = 'none';
-            saveUserData();
+            
+            await saveUserData();
             updateUI();
         }
 
@@ -386,11 +409,11 @@
             }
         }
 
-        function withdraw() {
+        async function withdraw() {
             if (balance >= 1500) {
                 balance -= 1500;
                 alert("Запит на виведення 1500 ⭐️ відправлено адміністратору!");
-                saveUserData();
+                await saveUserData();
                 updateUI();
             }
         }
