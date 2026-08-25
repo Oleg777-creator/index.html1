@@ -6,6 +6,8 @@
     <title>Telegram Stars Case Opening</title>
     <!-- Підключаємо Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Підключаємо Supabase JS клієнт -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             background-color: #121214;
@@ -154,8 +156,8 @@
         <h2>Безкоштовний кейс 🎁</h2>
         <div class="case-box" id="caseBox">📦</div>
         <p id="timerText" style="color: #8e8e93; font-size: 14px;"></p>
-        <button class="btn-action" id="openBtn" onclick="openCase()">Відкрити кейс</button>
-        <button class="btn-action" id="withdrawBtn" onclick="withdraw()" style="background: linear-gradient(135deg, #34c759, #248a3d); margin-top: 15px;">Вивести 1500 ⭐️</button>
+        <button class="btn-action" id="openBtn" onclick="openCase()" disabled>Завантаження...</button>
+        <button class="btn-action" id="withdrawBtn" onclick="withdraw()" style="background: linear-gradient(135deg, #34c759, #248a3d); margin-top: 15px;" disabled>Вивести 1500 ⭐️</button>
     </div>
 
     <!-- Модальне вікно поповнення -->
@@ -183,6 +185,15 @@
         const tg = window.Telegram?.WebApp;
         if (tg) tg.expand();
 
+        // Отримуємо Telegram ID користувача (для тесту в браузері генерується випадковий ID)
+        const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_" + Math.floor(Math.random() * 1000);
+
+        // Налаштування Supabase
+        const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_QpTiOqr_Uh4viHl7uVTA3A_JDBfNyPZ';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Ігрові дропи та ймовірності
         const drops = [
             { name: "Троянда", icon: "🌹", price: 25, chance: 0.40 },
@@ -193,19 +204,75 @@
             { name: "Snoop Dogg", icon: "🐕", price: 250, chance: 0.03 }
         ];
 
-        let balance = parseInt(localStorage.getItem('stars_balance')) || 0;
-        let lastOpenTime = parseInt(localStorage.getItem('last_case_open_time')) || 0;
+        let balance = 0;
+        let lastOpenTime = 0;
         let currentDrop = null;
+        let isDataLoaded = false;
+
+        // Завантаження даних користувача з Supabase
+        async function initUser() {
+            try {
+                let { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('telegram_id', telegramId)
+                    .single();
+
+                if (error && error.code === 'PGRST116') {
+                    // Якщо користувача немає в базі, створюємо з початковим балансом 0
+                    const { data: newData, error: insertError } = await supabaseClient
+                        .from('users')
+                        .insert([{ telegram_id: telegramId, stars_balance: 0, last_case_open_time: 0 }])
+                        .select()
+                        .single();
+                    
+                    if (!insertError && newData) {
+                        data = newData;
+                    }
+                }
+
+                if (data) {
+                    balance = data.stars_balance || 0;
+                    lastOpenTime = Number(data.last_case_open_time) || 0;
+                }
+            } catch (err) {
+                console.error("Помилка підключення до Supabase:", err);
+            } finally {
+                isDataLoaded = true;
+                updateUI();
+            }
+        }
+
+        // Функція для оновлення даних на сервері
+        async function saveUserData() {
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ 
+                    stars_balance: balance, 
+                    last_case_open_time: lastOpenTime 
+                })
+                .eq('telegram_id', telegramId);
+
+            if (error) {
+                console.error("Помилка збереження в Supabase:", error);
+            }
+        }
 
         function updateUI() {
             document.getElementById('balance').innerText = balance;
             
+            const openBtn = document.getElementById('openBtn');
+            const timerText = document.getElementById('timerText');
+
+            if (!isDataLoaded) {
+                openBtn.disabled = true;
+                timerText.innerText = "Завантаження...";
+                return;
+            }
+
             const now = Date.now();
             const cooldown = 24 * 60 * 60 * 1000; // 24 години
             const timeLeft = cooldown - (now - lastOpenTime);
-
-            const openBtn = document.getElementById('openBtn');
-            const timerText = document.getElementById('timerText');
 
             if (timeLeft > 0) {
                 openBtn.disabled = true;
@@ -222,6 +289,7 @@
         }
 
         function openCase() {
+            if (!isDataLoaded) return;
             const openBtn = document.getElementById('openBtn');
             const caseBox = document.getElementById('caseBox');
             
@@ -243,13 +311,13 @@
                 }
 
                 lastOpenTime = Date.now();
-                localStorage.setItem('last_case_open_time', lastOpenTime);
 
                 document.getElementById('winIcon').innerText = currentDrop.icon;
                 document.getElementById('winName').innerText = currentDrop.name;
                 document.getElementById('sellBtn').innerText = `Продати за ${currentDrop.price} ⭐️`;
                 document.getElementById('winModal').style.display = 'flex';
 
+                saveUserData();
                 updateUI();
             }, 1200);
         }
@@ -257,10 +325,10 @@
         function sellItem() {
             if (currentDrop) {
                 balance += currentDrop.price;
-                localStorage.setItem('stars_balance', balance);
                 currentDrop = null;
             }
             document.getElementById('winModal').style.display = 'none';
+            saveUserData();
             updateUI();
         }
 
@@ -268,18 +336,17 @@
         function closeTopupModal() { document.getElementById('topupModal').style.display = 'none'; }
 
         function buyStars(amount) {
-            // Симуляція оновлення балансу через Telegram Stars
             if (tg && tg.openInvoice) {
                 tg.openInvoice('mock_url', (status) => {
                     balance += amount;
-                    localStorage.setItem('stars_balance', balance);
                     closeTopupModal();
+                    saveUserData();
                     updateUI();
                 });
             } else {
                 balance += amount;
-                localStorage.setItem('stars_balance', balance);
                 closeTopupModal();
+                saveUserData();
                 updateUI();
             }
         }
@@ -287,14 +354,16 @@
         function withdraw() {
             if (balance >= 1500) {
                 balance -= 1500;
-                localStorage.setItem('stars_balance', balance);
                 alert("Запит на виведення 1500 ⭐️ відправлено адміністратору!");
+                saveUserData();
                 updateUI();
             }
         }
 
         setInterval(updateUI, 1000);
-        updateUI();
+        
+        // Запускаємо ініціалізацію бази даних при завантаженні сторінки
+        initUser();
     </script>
 </body>
 </html>
