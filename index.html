@@ -3,113 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star Gift - Case Opening</title>
+  <title>Star Gift - Cases</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg-color: #0b0e14;
-      --card-bg: #151b26;
-      --accent: #f3ba2f;
-      --accent-gradient: linear-gradient(135deg, #f3ba2f 0%, #f7931a 100%);
-      --purple-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --bg-color: #0f1218;
+      --card-bg: #181d28;
+      --accent: #ffd700;
+      --accent-gradient: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
+      --purple-gradient: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
       --text-main: #ffffff;
-      --text-secondary: #94a3b8;
+      --text-secondary: #8a9bb8;
+      --border-color: rgba(255, 255, 255, 0.07);
     }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-align: center;
       margin: 0;
       padding: 16px;
       padding-bottom: 50px;
     }
 
-    /* Шапка профілю та балансу */
-    .header-card {
+    /* Верхня панель балансу */
+    .wallet-card {
       background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
-      padding: 16px;
+      padding: 16px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .balance-row {
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .balance-info {
-      font-size: 20px;
+    .wallet-left {
+      text-align: left;
+    }
+
+    .wallet-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .wallet-balance {
+      font-size: 22px;
       font-weight: 800;
+      color: var(--accent);
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--accent);
+      margin-top: 2px;
     }
 
-    .action-group {
+    .wallet-buttons {
       display: flex;
       gap: 8px;
     }
 
-    .btn-small {
-      flex: 1;
+    .btn-icon {
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
       color: var(--text-main);
       padding: 8px 12px;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       transition: all 0.2s;
     }
 
-    .btn-small:active {
-      transform: scale(0.96);
+    .btn-icon:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     /* Картки кейсів */
     .case-card {
       background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
       padding: 20px;
       margin-bottom: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
 
-    .case-title {
+    .case-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       font-size: 18px;
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    .case-timer {
+    .case-sub {
       color: var(--text-secondary);
       font-size: 12px;
-      margin-bottom: 14px;
-      font-weight: 500;
+      margin-bottom: 16px;
     }
 
     /* Рулетка */
     .roulette-container {
       position: relative;
       width: 100%;
-      height: 95px;
+      height: 90px;
       overflow: hidden;
-      background: #090c10;
-      border: 2px solid rgba(243, 186, 47, 0.3);
+      background: #090b0f;
+      border: 2px solid rgba(255, 215, 0, 0.2);
       border-radius: 14px;
-      margin: 12px 0;
+      margin-bottom: 16px;
     }
 
     .roulette-pointer {
@@ -119,9 +131,9 @@
       transform: translateX(-50%);
       width: 3px;
       height: 100%;
-      background: #ef4444;
+      background: #ff3b30;
       z-index: 10;
-      box-shadow: 0 0 10px #ef4444;
+      box-shadow: 0 0 10px #ff3b30;
     }
 
     .roulette-track {
@@ -134,61 +146,53 @@
     }
 
     .roulette-item {
-      min-width: 95px;
+      min-width: 90px;
       height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(180deg, #1e2532 0%, #151b26 100%);
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      background: linear-gradient(180deg, #1f2636 0%, #181d28 100%);
+      border-right: 1px solid var(--border-color);
       color: #fff;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
     }
 
     .roulette-item span {
-      font-size: 24px;
+      font-size: 22px;
       margin-bottom: 2px;
     }
 
     /* Кнопки */
-    .btn-primary {
+    .btn-main {
       background: var(--accent-gradient);
       color: #000;
       border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
+      padding: 13px;
+      border-radius: 14px;
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(243, 186, 47, 0.3);
+      box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
       transition: transform 0.1s;
+      margin-bottom: 8px;
     }
 
-    .btn-primary:active {
-      transform: scale(0.97);
-    }
+    .btn-main:active { transform: scale(0.97); }
+    .btn-main:disabled { background: #252b38; color: #5a657d; box-shadow: none; cursor: not-allowed; }
 
-    .btn-primary:disabled {
-      background: #2d3748;
-      color: #718096;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    .btn-secondary {
+    .btn-sub {
       background: var(--purple-gradient);
       color: #fff;
       border: none;
-      padding: 10px 16px;
+      padding: 10px;
       border-radius: 12px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
-      margin-top: 8px;
     }
 
     /* Модальні вікна */
@@ -196,51 +200,47 @@
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
       z-index: 100;
       justify-content: center;
       align-items: center;
       padding: 20px;
     }
 
-    .modal-content {
-      background: #18202f;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .modal-box {
+      background: #161b24;
+      border: 1px solid var(--border-color);
       padding: 24px;
       border-radius: 24px;
       width: 100%;
       max-width: 320px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     }
 
-    .modal-content h3 {
-      margin-top: 0;
-      margin-bottom: 16px;
-    }
+    .modal-box h3 { margin-top: 0; margin-bottom: 12px; font-size: 18px; }
+    .modal-box p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- Шапка балансу -->
-  <div class="header-card">
-    <div class="balance-row">
-      <div class="balance-info">
-        ⭐ <span id="balanceDisplay">0</span>
-      </div>
-      <div style="font-size: 12px; color: var(--text-secondary);">Ваш баланс</div>
+  <!-- Блок балансу -->
+  <div class="wallet-card">
+    <div class="wallet-left">
+      <div class="wallet-label">Ваш баланс зірок</div>
+      <div class="wallet-balance">⭐ <span id="balanceDisplay">0</span></div>
     </div>
-    <div class="action-group">
-      <button class="btn-small" onclick="openTopUpModal()">💳 Поповнити</button>
-      <button class="btn-small" onclick="openWithdrawModal()">📤 Вивести</button>
+    <div class="wallet-buttons">
+      <button class="btn-icon" onclick="openModal('topUpModal')">💳 Поповнити</button>
+      <button class="btn-icon" onclick="openModal('withdrawModal')">📤 Вивести</button>
     </div>
   </div>
 
   <!-- БЕЗКОШТОВНИЙ КЕЙС -->
   <div class="case-card">
-    <div class="case-title">🎁 Безкоштовний кейс</div>
-    <div id="timerDisplay" class="case-timer">Перевірка таймера...</div>
+    <div class="case-header">🎁 Безкоштовний кейс</div>
+    <div id="timerDisplay" class="case-sub">Перевірка таймера...</div>
     
     <div class="roulette-container">
       <div class="roulette-pointer"></div>
@@ -251,46 +251,44 @@
       </div>
     </div>
 
-    <button class="btn-primary" id="openFreeBtn" onclick="startFreeOpening()">Відкрити безкоштовно</button>
-    <button class="btn-secondary" onclick="openPrizeModal('free')">📦 Вміст кейса</button>
+    <button class="btn-main" id="openFreeBtn" onclick="startFreeOpening()">Відкрити безкоштовно</button>
+    <button class="btn-sub" onclick="openPrizeModal('free')">📦 Вміст кейса</button>
   </div>
 
   <!-- ПЛАТНИЙ КЕЙС -->
   <div class="case-card">
-    <div class="case-title">💎 Преміум кейс</div>
-    <div class="case-timer">Вартість відкриття: 50 зірок ⭐</div>
+    <div class="case-header">💎 Преміум кейс</div>
+    <div class="case-sub">Вартість відкриття: 50 зірок ⭐</div>
     
-    <button class="btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" onclick="startPaidOpening(50)">Відкрити за 50 ⭐</button>
-    <button class="btn-secondary" onclick="openPrizeModal('paid')">📦 Вміст кейса</button>
+    <button class="btn-main" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);" onclick="startPaidOpening(50)">Відкрити за 50 ⭐</button>
+    <button class="btn-sub" onclick="openPrizeModal('paid')">📦 Вміст кейса</button>
   </div>
 
-  <!-- Модальне вікно: Вміст кейса -->
+  <!-- Модалки -->
   <div id="prizeModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-box">
       <h3>Шанси кейса</h3>
-      <div id="modalItemsList" style="margin: 15px 0; text-align:left; font-size: 14px;"></div>
-      <button class="btn-primary" onclick="closeModal('prizeModal')">Закрити</button>
+      <div id="modalItemsList" style="margin: 15px 0; text-align:left; font-size: 13px;"></div>
+      <button class="btn-main" onclick="closeModal('prizeModal')">Закрити</button>
     </div>
   </div>
 
-  <!-- Модальне вікно: Поповнення -->
   <div id="topUpModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-box">
       <h3>Поповнення зірок</h3>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Оберіть пакет зірок для поповнення через Telegram Stars:</p>
-      <button class="btn-primary" style="margin-bottom: 10px;" onclick="simulateInvoice(50)">+50 зірок (Test)</button>
-      <button class="btn-primary" style="margin-bottom: 15px;" onclick="simulateInvoice(200)">+200 зірок (Test)</button>
-      <button class="btn-small" style="width:100%; padding: 12px;" onclick="closeModal('topUpModal')">Скасувати</button>
+      <p>Оберіть пакет поповнення через Telegram Stars (відкриє бота для оплати):</p>
+      <button class="btn-main" onclick="buyStars(50, 25)">50 зірок (25 ⭐)</button>
+      <button class="btn-main" onclick="buyStars(200, 95)">200 зірок (95 ⭐)</button>
+      <button class="btn-icon" style="width:100%; justify-content:center; padding: 12px; margin-top: 10px;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
 
-  <!-- Модальне вікно: Виведення -->
   <div id="withdrawModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-box">
       <h3>Виведення зірок</h3>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Мінімальна сума для виведення: 500 зірок.</p>
-      <button class="btn-primary" style="margin-bottom: 15px;" onclick="requestWithdraw()">Вивести на баланс Telegram</button>
-      <button class="btn-small" style="width:100%; padding: 12px;" onclick="closeModal('withdrawModal')">Скасувати</button>
+      <p>Мінімум для виведення: 500 зірок. Заявка надійде адміністратору.</p>
+      <button class="btn-main" onclick="requestWithdraw()">Створити заявку</button>
+      <button class="btn-icon" style="width:100%; justify-content:center; padding: 12px; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
     </div>
   </div>
 
@@ -308,28 +306,29 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const telegramId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_777";
+    const username = tg.initDataUnsafe?.user?.username || "unknown_user";
 
     let userBalance = 0;
     let lastOpenTime = 0;
     const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
 
-    const freeCaseItems = [
+    // Змінені шанси для преміум кейса (20 зірок - 80%, 400 зірок - 0.5%)
+    const paidCaseItems = [
       { name: "20 Зірок", value: 20, chance: 80.0 },
       { name: "50 Зірок", value: 50, chance: 15.0 },
-      { name: "100 Зірок", value: 100, chance: 3.5 },
-      { name: "400 Зірок", value: 400, chance: 1.5 }
+      { name: "100 Зірок", value: 100, chance: 4.0 },
+      { name: "400 Зірок", value: 400, chance: 1.0 }
     ];
 
-    const paidCaseItems = [
-      { name: "40 Зірок", value: 40, chance: 60.0 },
-      { name: "100 Зірок", value: 100, chance: 30.0 },
-      { name: "300 Зірок", value: 300, chance: 8.5 },
-      { name: "1000 Зірок", value: 1000, chance: 1.5 }
+    const freeCaseItems = [
+      { name: "10 Зірок", value: 10, chance: 85.0 },
+      { name: "30 Зірок", value: 30, chance: 12.0 },
+      { name: "50 Зірок", value: 50, chance: 3.0 }
     ];
 
     async function loadUserData() {
       if (!supabaseClient) {
-        userBalance = 1710;
+        userBalance = 100;
         updateUI();
         return;
       }
@@ -413,20 +412,18 @@
         html += `<div class="roulette-item"><span>🎁</span>${item.name}</div>`;
       }
       track.innerHTML = html;
-
       track.style.transition = 'none';
       track.style.transform = 'translateX(0px)';
 
       setTimeout(() => {
-        const itemWidth = 95;
+        const itemWidth = 90;
         const offset = (winningIndex * itemWidth) - (160 - (itemWidth / 2));
         track.style.transition = 'transform 4s cubic-bezier(0.05, 0.9, 0.2, 1)';
         track.style.transform = `translateX(-${offset}px)`;
       }, 50);
 
       setTimeout(() => {
-        const newBalance = userBalance + winningItem.value;
-        saveUserData(newBalance, Date.now());
+        saveUserData(userBalance + winningItem.value, Date.now());
         tg.showAlert(`Вітаю! Ви виграли ${winningItem.name}`);
       }, 4100);
     }
@@ -443,24 +440,40 @@
       tg.showAlert(`Ви відкрили преміум кейс і виграли ${winningItem.name}!`);
     }
 
-    // Демо-поповнення (тут згодом можна підключити платіжну систему бота)
-    function simulateInvoice(amount) {
-      saveUserData(userBalance + amount);
+    // Донат через перехід до бота (повинен оброблятись у твоїму Telegram-боті)
+    function buyStars(starsAmount, priceInStars) {
       closeModal('topUpModal');
-      tg.showAlert(`Баланс успішно поповнено на ${amount} ⭐!`);
+      // Відкриваємо чат з ботом або відправляємо команду на покупку
+      window.open(`https://t.me/share/url?url=Поповнення+${starsAmount}+зірок`, '_blank');
+      tg.showAlert(`Для оплати ${priceInStars} ⭐ зверніться до бота та введіть команду /pay_${starsAmount}`);
     }
 
-    function requestWithdraw() {
+    // Збереження заявки на виведення в Supabase, щоб ти її бачив!
+    async function requestWithdraw() {
       if (userBalance < 500) {
         tg.showAlert("Для виведення потрібно мінімум 500 зірок!");
         return;
       }
+
       closeModal('withdrawModal');
-      tg.showAlert("Заявку на виведення створено! Адміністратор перевірить її найближчим часом.");
+
+      if (supabaseClient) {
+        // Записуємо в таблицю withdrawals (створи її в Supabase з полями: telegram_id, username, amount, status)
+        const { error } = await supabaseClient.from('withdrawals').insert([
+          { telegram_id: telegramId, username: username, amount: userBalance, status: 'pending' }
+        ]);
+
+        if (error) {
+          console.error(error);
+          tg.showAlert("Поשлка створення заявки. Спробуйте пізніше.");
+          return;
+        }
+      }
+
+      tg.showAlert("Заявку на виведення успішно створено! Перевірте базу даних у Supabase.");
     }
 
-    function openTopUpModal() { document.getElementById('topUpModal').style.display = 'flex'; }
-    function openWithdrawModal() { document.getElementById('withdrawModal').style.display = 'flex'; }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function openPrizeModal(type) {
