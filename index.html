@@ -13,28 +13,48 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-align: center;
       margin: 0;
-      padding: 20px;
+      padding: 15px;
+      padding-bottom: 40px;
     }
     .balance-box {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       background: #1a1a2e;
-      padding: 12px;
+      padding: 10px;
       border-radius: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       border: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-up-btn {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .case-card {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
     }
     /* Рулетка */
     .roulette-container {
       position: relative;
       width: 100%;
       max-width: 320px;
-      height: 100px;
+      height: 90px;
       overflow: hidden;
       background: #111;
       border: 2px solid #555;
-      border-radius: 12px;
-      margin: 20px auto;
+      border-radius: 10px;
+      margin: 10px auto;
     }
     .roulette-pointer {
       position: absolute;
@@ -55,35 +75,45 @@
       transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
     }
     .roulette-item {
-      min-width: 100px;
+      min-width: 90px;
       height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #1a1a2e;
+      background: #252542;
       border-right: 1px solid #333;
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
     }
-    button {
+    button.action-btn {
       background: #ffcc00;
       color: #000;
       border: none;
-      padding: 12px 20px;
+      padding: 10px 15px;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      margin: 10px 0;
+      margin: 5px 0;
       width: 100%;
-      max-width: 320px;
     }
     button:disabled {
       background: #555;
       color: #888;
       cursor: not-allowed;
+    }
+    .secondary-btn {
+      background: #4a4ae2;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 5px;
     }
     /* Модальне вікно */
     .modal {
@@ -100,7 +130,7 @@
       padding: 20px;
       border-radius: 12px;
       width: 85%;
-      max-width: 320px;
+      max-width: 300px;
       color: #fff;
       text-align: center;
     }
@@ -108,34 +138,57 @@
 </head>
 <body>
 
-  <div class="balance-box">⭐ Баланс: <span id="balanceDisplay">0</span> зірок</div>
-
-  <h3>Безкоштовний кейс</h3>
-  <div id="timerDisplay" style="color: #aaa; margin-bottom: 10px;">Завантаження...</div>
-
-  <!-- Рулетка -->
-  <div class="roulette-container">
-    <div class="roulette-pointer"></div>
-    <div class="roulette-track" id="rouletteTrack"></div>
+  <!-- Блок балансу та поповнення -->
+  <div class="balance-box">
+    <span>⭐ <span id="balanceDisplay">0</span> зірок</span>
+    <button class="top-up-btn" onclick="topUpStars()">+ Поповнити</button>
   </div>
 
-  <button id="openBtn" onclick="startOpening()">Відкрити кейс</button>
-  <button onclick="openPrizeModal()" style="background:#4a4ae2; color:#fff;">📦 Що може випасти?</button>
+  <!-- БЕЗКОШТОВНИЙ КЕЙС -->
+  <div class="case-card">
+    <h3>🎁 Безкоштовний кейс</h3>
+    <div id="timerDisplay" style="color: #aaa; font-size: 13px; margin-bottom: 8px;">Перевірка таймера...</div>
+    
+    <div class="roulette-container">
+      <div class="roulette-pointer"></div>
+      <div class="roulette-track" id="rouletteTrackFree">
+        <div class="roulette-item"><span>🎁</span><small>Подарунок</small></div>
+        <div class="roulette-item"><span>🎁</span><small>Подарунок</small></div>
+        <div class="roulette-item"><span>🎁</span><small>Подарунок</small></div>
+      </div>
+    </div>
 
-  <!-- Модальне вікно вмісту кейса -->
+    <button class="action-btn" id="openFreeBtn" onclick="startFreeOpening()">Відкрити безкоштовно</button>
+    <button class="secondary-btn" onclick="openPrizeModal('free')">📦 Що може випасти?</button>
+  </div>
+
+  <!-- ПЛАТНИЙ КЕЙС -->
+  <div class="case-card">
+    <h3>💎 Преміум кейс (50 зірок)</h3>
+    <button class="action-btn" style="background:#ff9900;" onclick="startPaidOpening(50)">Відкрити за 50 ⭐</button>
+    <button class="secondary-btn" onclick="openPrizeModal('paid')">📦 Вміст кейса</button>
+  </div>
+
+  <!-- Модальне вікно вмісту -->
   <div id="prizeModal" class="modal">
     <div class="modal-content">
       <h3>Вміст кейса</h3>
-      <div id="modalItemsList" style="margin: 15px 0; text-align:left;"></div>
-      <button onclick="closePrizeModal()" style="background:#ffcc00;">Закрити</button>
+      <div id="modalItemsList" style="margin: 15px 0; text-align:left; font-size: 14px;"></div>
+      <button class="action-btn" onclick="closePrizeModal()">Закрити</button>
     </div>
   </div>
 
   <script>
-    // ПРИКЛАД: Заміни на свої ключі Supabase
-    const SUPABASE_URL = https:/nlepgjjceiroonynqgoi.supabase.co/rest/v1/;
-    const SUPABASE_ANON_KEY = sb_publishable_QpTiOqr_Uh4viHl7uVTA3A_JDBfNyPZ;
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Твої ключі Supabase (без зайвого хвоста /rest/v1/)
+    const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_QpTiOqr_Uh4viHl7uVTA3A_JDBfNyPZ';
+    
+    let supabaseClient = null;
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.error("Помилка ініціалізації Supabase:", e);
+    }
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -143,65 +196,64 @@
 
     let userBalance = 0;
     let lastOpenTime = 0;
-    const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 години у мілісекундах
+    const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 години
 
-    // Список призів та їхні шанси (у сумі 100%)
-    const caseItems = [
+    const freeCaseItems = [
       { name: "20 Зірок", value: 20, chance: 80.0 },
       { name: "50 Зірок", value: 50, chance: 15.0 },
       { name: "100 Зірок", value: 100, chance: 3.5 },
       { name: "400 Зірок", value: 400, chance: 1.5 }
     ];
 
-    // Ініціалізація рулетки порожніми елементами для краси
-    function initRouletteVisual() {
-      const track = document.getElementById('rouletteTrack');
-      let html = '';
-      for (let i = 0; i < 10; i++) {
-        html += `<div class="roulette-item"><span>🎁</span><small>Кейс</small></div>`;
-      }
-      track.innerHTML = html;
-    }
+    const paidCaseItems = [
+      { name: "40 Зірок", value: 40, chance: 60.0 },
+      { name: "100 Зірок", value: 100, chance: 30.0 },
+      { name: "300 Зірок", value: 300, chance: 8.5 },
+      { name: "1000 Зірок", value: 1000, chance: 1.5 }
+    ];
 
-    // Завантаження даних з Supabase
+    // Завантаження даних
     async function loadUserData() {
-      let { data, error } = await supabase
+      if (!supabaseClient) {
+        userBalance = 100;
+        updateUI();
+        return;
+      }
+
+      let { data, error } = await supabaseClient
         .from('users')
         .select('*')
         .eq('telegram_id', telegramId)
         .single();
 
       if (error || !data) {
-        // Створюємо нового користувача, якщо його немає
-        await supabase.from('users').insert([
-          { telegram_id: telegramId, stars_balance: 50, free_case_timer: 0 }
+        await supabaseClient.from('users').insert([
+          { telegram_id: telegramId, stars_balance: 100, free_case_timer: 0 }
         ]);
-        userBalance = 50;
+        userBalance = 100;
         lastOpenTime = 0;
       } else {
-        userBalance = data.stars_balance;
+        userBalance = Number(data.stars_balance) || 0;
         lastOpenTime = Number(data.free_case_timer) || 0;
       }
       updateUI();
     }
 
-    // Збереження даних в Supabase
+    // Збереження даних
     async function saveUserData(newBalance, newTimer) {
       userBalance = newBalance;
-      lastOpenTime = newTimer;
+      if (newTimer !== undefined) lastOpenTime = newTimer;
+      updateUI();
 
-      const { error } = await supabase
+      if (!supabaseClient) return;
+
+      await supabaseClient
         .from('users')
         .upsert({
           telegram_id: telegramId,
-          stars_balance: newBalance,
-          free_case_timer: newTimer
+          stars_balance: userBalance,
+          free_case_timer: lastOpenTime
         });
-
-      if (error) {
-        console.error("Помилка збереження:", error);
-      }
-      updateUI();
     }
 
     function updateUI() {
@@ -209,7 +261,7 @@
       
       const now = Date.now();
       const timeLeft = (lastOpenTime + COOLDOWN_TIME) - now;
-      const openBtn = document.getElementById('openBtn');
+      const openBtn = document.getElementById('openFreeBtn');
       const timerDisplay = document.getElementById('timerDisplay');
 
       if (timeLeft > 0) {
@@ -223,48 +275,43 @@
       }
     }
 
-    // Вибір призу за відсотками (шансами)
-    function getRandomItem() {
+    function getRandomItem(items) {
       const rand = Math.random() * 100;
       let cumulative = 0;
-      for (let item of caseItems) {
+      for (let item of items) {
         cumulative += item.chance;
         if (rand <= cumulative) return item;
       }
-      return caseItems[0];
+      return items[0];
     }
 
-    // Запуск рулетки
-    function startOpening() {
+    // Відкриття безкоштовного кейса
+    function startFreeOpening() {
       const now = Date.now();
       if (now < lastOpenTime + COOLDOWN_TIME) return;
 
-      const openBtn = document.getElementById('openBtn');
-      openBtn.disabled = true;
+      document.getElementById('openFreeBtn').disabled = true;
+      const track = document.getElementById('rouletteTrackFree');
+      const winningItem = getRandomItem(freeCaseItems);
+      const winningIndex = 30;
 
-      const track = document.getElementById('rouletteTrack');
-      const winningItem = getRandomItem();
-      const winningIndex = 35; // Позиція виграшного елемента у довгій стрічці
-
-      let itemsHtml = '';
-      for (let i = 0; i < 40; i++) {
-        let item = (i === winningIndex) ? winningItem : getRandomItem();
-        itemsHtml += `<div class="roulette-item"><span>🎁</span><small>${item.name}</small></div>`;
+      let html = '';
+      for (let i = 0; i < 35; i++) {
+        let item = (i === winningIndex) ? winningItem : getRandomItem(freeCaseItems);
+        html += `<div class="roulette-item"><span>🎁</span><small>${item.name}</small></div>`;
       }
-      track.innerHTML = itemsHtml;
+      track.innerHTML = html;
 
-      // Скидаємо рулетку на початок
       track.style.transition = 'none';
       track.style.transform = 'translateX(0px)';
 
       setTimeout(() => {
-        const itemWidth = 100;
+        const itemWidth = 90;
         const offset = (winningIndex * itemWidth) - (160 - (itemWidth / 2));
         track.style.transition = 'transform 4s cubic-bezier(0.05, 0.9, 0.2, 1)';
         track.style.transform = `translateX(-${offset}px)`;
       }, 50);
 
-      // Завершення прокрутки через 4.1 секунди
       setTimeout(() => {
         const newBalance = userBalance + winningItem.value;
         saveUserData(newBalance, Date.now());
@@ -272,13 +319,34 @@
       }, 4100);
     }
 
-    // Модальне вікно вмісту
-    function openPrizeModal() {
+    // Відкриття платних кейсів
+    function startPaidOpening(cost) {
+      if (userBalance < cost) {
+        alert("Недостатньо зірок на балансі!");
+        return;
+      }
+
+      const winningItem = getRandomItem(paidCaseItems);
+      const newBalance = userBalance - cost + winningItem.value;
+      saveUserData(newBalance);
+      alert(`Ви відкрили преміум кейс і виграли ${winningItem.name}! Баланс оновлено.`);
+    }
+
+    // Поповнення зірок
+    function topUpStars() {
+      const added = 50;
+      saveUserData(userBalance + added);
+      alert(`Баланс успішно поповнено на ${added} зірок!`);
+    }
+
+    // Модальне вікно
+    function openPrizeModal(type) {
+      const items = type === 'free' ? freeCaseItems : paidCaseItems;
       const container = document.getElementById('modalItemsList');
-      container.innerHTML = caseItems.map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px;">
+      container.innerHTML = items.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; border-bottom:1px solid #333; padding-bottom:4px;">
           <span>${i.name}</span>
-          <span style="color:#aaa;">${i.chance}%</span>
+          <span style="color:#ffcc00;">${i.chance}%</span>
         </div>
       `).join('');
       document.getElementById('prizeModal').style.display = 'flex';
@@ -288,8 +356,7 @@
       document.getElementById('prizeModal').style.display = 'none';
     }
 
-    // Запуск при завантаженні сторінки
-    initRouletteVisual();
+    // Старт
     loadUserData();
   </script>
 </body>
