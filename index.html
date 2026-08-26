@@ -276,7 +276,7 @@
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
-      <p>Оберіть пакет поповнення через Telegram Stars (відкриє бота для оплати):</p>
+      <p>Оберіть пакет поповнення через Telegram Stars:</p>
       <button class="btn-main" onclick="buyStars(50, 25)">50 зірок (25 ⭐)</button>
       <button class="btn-main" onclick="buyStars(200, 95)">200 зірок (95 ⭐)</button>
       <button class="btn-icon" style="width:100%; justify-content:center; padding: 12px; margin-top: 10px;" onclick="closeModal('topUpModal')">Скасувати</button>
@@ -312,12 +312,12 @@
     let lastOpenTime = 0;
     const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
 
-    // Змінені шанси для преміум кейса (20 зірок - 80%, 400 зірок - 0.5%)
+    // Шанси для преміум кейса
     const paidCaseItems = [
       { name: "20 Зірок", value: 20, chance: 80.0 },
       { name: "50 Зірок", value: 50, chance: 15.0 },
-      { name: "100 Зірок", value: 100, chance: 4.0 },
-      { name: "400 Зірок", value: 400, chance: 1.0 }
+      { name: "100 Зірок", value: 100, chance: 4.5 },
+      { name: "400 Зірок", value: 400, chance: 0.5 }
     ];
 
     const freeCaseItems = [
@@ -440,15 +440,20 @@
       tg.showAlert(`Ви відкрили преміум кейс і виграли ${winningItem.name}!`);
     }
 
-    // Донат через перехід до бота (повинен оброблятись у твоїму Telegram-боті)
     function buyStars(starsAmount, priceInStars) {
       closeModal('topUpModal');
-      // Відкриваємо чат з ботом або відправляємо команду на покупку
-      window.open(`https://t.me/share/url?url=Поповнення+${starsAmount}+зірок`, '_blank');
-      tg.showAlert(`Для оплати ${priceInStars} ⭐ зверніться до бота та введіть команду /pay_${starsAmount}`);
+      
+      // Відкриває чат з ботом усередині Telegram без переходу в зовнішній браузер
+      const botUsername = "your_bot_username"; // Заміни на юзернейм твого бота без @
+      if (tg.openTelegramLink) {
+        tg.openTelegramLink(`https://t.me/${botUsername}?start=pay_${starsAmount}`);
+      } else {
+        window.open(`https://t.me/${botUsername}?start=pay_${starsAmount}`, '_blank');
+      }
+      
+      tg.showAlert(`Запит на поповнення на ${starsAmount} зірок сформовано! Натисніть «Start» у боті для оплати.`);
     }
 
-    // Збереження заявки на виведення в Supabase, щоб ти її бачив!
     async function requestWithdraw() {
       if (userBalance < 500) {
         tg.showAlert("Для виведення потрібно мінімум 500 зірок!");
@@ -458,19 +463,18 @@
       closeModal('withdrawModal');
 
       if (supabaseClient) {
-        // Записуємо в таблицю withdrawals (створи її в Supabase з полями: telegram_id, username, amount, status)
         const { error } = await supabaseClient.from('withdrawals').insert([
           { telegram_id: telegramId, username: username, amount: userBalance, status: 'pending' }
         ]);
 
         if (error) {
           console.error(error);
-          tg.showAlert("Поשлка створення заявки. Спробуйте пізніше.");
+          tg.showAlert("Помилка створення заявки. Спробуйте пізніше.");
           return;
         }
       }
 
-      tg.showAlert("Заявку на виведення успішно створено! Перевірте базу даних у Supabase.");
+      tg.showAlert("Заявку на виведення успішно створено! Вона з'явилася в таблиці withdrawals.");
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
