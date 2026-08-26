@@ -1,426 +1,296 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Stars Case Opening</title>
-    <!-- Підключаємо Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Підключаємо Supabase JS клієнт -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            background-color: #121214;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .header {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .balance-card {
-            background: #1c1c1e;
-            padding: 10px 18px;
-            border-radius: 20px;
-            border: 1px solid #2c2c2e;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .btn-topup {
-            background: linear-gradient(135deg, #ffb703, #fb8500);
-            border: none;
-            color: #000;
-            font-weight: bold;
-            padding: 10px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(251, 133, 0, 0.3);
-        }
-
-        .case-container {
-            width: 100%;
-            max-width: 320px;
-            background: #1c1c1e;
-            border-radius: 24px;
-            padding: 24px;
-            box-sizing: border-box;
-            text-align: center;
-            border: 1px solid #2c2c2e;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        }
-
-        .case-box {
-            width: 140px;
-            height: 140px;
-            margin: 20px auto;
-            background: linear-gradient(135deg, #2a2a2e, #18181a);
-            border: 2px solid #ffb703;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            box-shadow: 0 0 20px rgba(255, 183, 3, 0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .case-box.open-anim {
-            animation: bounce 0.6s ease infinite alternate;
-        }
-
-        @keyframes bounce {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        .btn-action {
-            width: 100%;
-            background: linear-gradient(135deg, #007aff, #0056b3);
-            border: none;
-            color: #fff;
-            padding: 14px;
-            border-radius: 16px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-action:disabled {
-            background: #2c2c2e;
-            color: #8e8e93;
-            cursor: not-allowed;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: #1c1c1e;
-            border-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 300px;
-            text-align: center;
-            border: 1px solid #2c2c2e;
-        }
-
-        .modal-btn {
-            background: #2c2c2e;
-            color: #fff;
-            border: 1px solid #3a3a3c;
-            padding: 12px;
-            border-radius: 12px;
-            margin: 8px 0;
-            width: 100%;
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star Gift - Case Opening</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      background-color: #0f0f1a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .balance-box {
+      font-size: 20px;
+      font-weight: bold;
+      background: #1a1a2e;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #333;
+    }
+    /* Рулетка */
+    .roulette-container {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      height: 100px;
+      overflow: hidden;
+      background: #111;
+      border: 2px solid #555;
+      border-radius: 12px;
+      margin: 20px auto;
+    }
+    .roulette-pointer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 100%;
+      background: #ffcc00;
+      z-index: 10;
+    }
+    .roulette-track {
+      display: flex;
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
+    }
+    .roulette-item {
+      min-width: 100px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      border-right: 1px solid #333;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    button {
+      background: #ffcc00;
+      color: #000;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 320px;
+    }
+    button:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+    }
+    /* Модальне вікно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #1e1e2f;
+      padding: 20px;
+      border-radius: 12px;
+      width: 85%;
+      max-width: 320px;
+      color: #fff;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="balance-card">
-            <span>⭐️</span>
-            <span id="balance">0</span>
+  <div class="balance-box">⭐ Баланс: <span id="balanceDisplay">0</span> зірок</div>
+
+  <h3>Безкоштовний кейс</h3>
+  <div id="timerDisplay" style="color: #aaa; margin-bottom: 10px;">Завантаження...</div>
+
+  <!-- Рулетка -->
+  <div class="roulette-container">
+    <div class="roulette-pointer"></div>
+    <div class="roulette-track" id="rouletteTrack"></div>
+  </div>
+
+  <button id="openBtn" onclick="startOpening()">Відкрити кейс</button>
+  <button onclick="openPrizeModal()" style="background:#4a4ae2; color:#fff;">📦 Що може випасти?</button>
+
+  <!-- Модальне вікно вмісту кейса -->
+  <div id="prizeModal" class="modal">
+    <div class="modal-content">
+      <h3>Вміст кейса</h3>
+      <div id="modalItemsList" style="margin: 15px 0; text-align:left;"></div>
+      <button onclick="closePrizeModal()" style="background:#ffcc00;">Закрити</button>
+    </div>
+  </div>
+
+  <script>
+    // ПРИКЛАД: Заміни на свої ключі Supabase
+    const SUPABASE_URL = https:/nlepgjjceiroonynqgoi.supabase.co/rest/v1/;
+    const SUPABASE_ANON_KEY = sb_publishable_QpTiOqr_Uh4viHl7uVTA3A_JDBfNyPZ;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const telegramId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_777";
+
+    let userBalance = 0;
+    let lastOpenTime = 0;
+    const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 години у мілісекундах
+
+    // Список призів та їхні шанси (у сумі 100%)
+    const caseItems = [
+      { name: "20 Зірок", value: 20, chance: 80.0 },
+      { name: "50 Зірок", value: 50, chance: 15.0 },
+      { name: "100 Зірок", value: 100, chance: 3.5 },
+      { name: "400 Зірок", value: 400, chance: 1.5 }
+    ];
+
+    // Ініціалізація рулетки порожніми елементами для краси
+    function initRouletteVisual() {
+      const track = document.getElementById('rouletteTrack');
+      let html = '';
+      for (let i = 0; i < 10; i++) {
+        html += `<div class="roulette-item"><span>🎁</span><small>Кейс</small></div>`;
+      }
+      track.innerHTML = html;
+    }
+
+    // Завантаження даних з Supabase
+    async function loadUserData() {
+      let { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('telegram_id', telegramId)
+        .single();
+
+      if (error || !data) {
+        // Створюємо нового користувача, якщо його немає
+        await supabase.from('users').insert([
+          { telegram_id: telegramId, stars_balance: 50, free_case_timer: 0 }
+        ]);
+        userBalance = 50;
+        lastOpenTime = 0;
+      } else {
+        userBalance = data.stars_balance;
+        lastOpenTime = Number(data.free_case_timer) || 0;
+      }
+      updateUI();
+    }
+
+    // Збереження даних в Supabase
+    async function saveUserData(newBalance, newTimer) {
+      userBalance = newBalance;
+      lastOpenTime = newTimer;
+
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          telegram_id: telegramId,
+          stars_balance: newBalance,
+          free_case_timer: newTimer
+        });
+
+      if (error) {
+        console.error("Помилка збереження:", error);
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('balanceDisplay').innerText = userBalance;
+      
+      const now = Date.now();
+      const timeLeft = (lastOpenTime + COOLDOWN_TIME) - now;
+      const openBtn = document.getElementById('openBtn');
+      const timerDisplay = document.getElementById('timerDisplay');
+
+      if (timeLeft > 0) {
+        openBtn.disabled = true;
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        timerDisplay.innerText = `Наступний кейс через: ${hours}г ${minutes}хв`;
+      } else {
+        openBtn.disabled = false;
+        timerDisplay.innerText = `Кейс доступний безкоштовно!`;
+      }
+    }
+
+    // Вибір призу за відсотками (шансами)
+    function getRandomItem() {
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      for (let item of caseItems) {
+        cumulative += item.chance;
+        if (rand <= cumulative) return item;
+      }
+      return caseItems[0];
+    }
+
+    // Запуск рулетки
+    function startOpening() {
+      const now = Date.now();
+      if (now < lastOpenTime + COOLDOWN_TIME) return;
+
+      const openBtn = document.getElementById('openBtn');
+      openBtn.disabled = true;
+
+      const track = document.getElementById('rouletteTrack');
+      const winningItem = getRandomItem();
+      const winningIndex = 35; // Позиція виграшного елемента у довгій стрічці
+
+      let itemsHtml = '';
+      for (let i = 0; i < 40; i++) {
+        let item = (i === winningIndex) ? winningItem : getRandomItem();
+        itemsHtml += `<div class="roulette-item"><span>🎁</span><small>${item.name}</small></div>`;
+      }
+      track.innerHTML = itemsHtml;
+
+      // Скидаємо рулетку на початок
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0px)';
+
+      setTimeout(() => {
+        const itemWidth = 100;
+        const offset = (winningIndex * itemWidth) - (160 - (itemWidth / 2));
+        track.style.transition = 'transform 4s cubic-bezier(0.05, 0.9, 0.2, 1)';
+        track.style.transform = `translateX(-${offset}px)`;
+      }, 50);
+
+      // Завершення прокрутки через 4.1 секунди
+      setTimeout(() => {
+        const newBalance = userBalance + winningItem.value;
+        saveUserData(newBalance, Date.now());
+        alert(`Вітаю! Ви виграли ${winningItem.name}`);
+      }, 4100);
+    }
+
+    // Модальне вікно вмісту
+    function openPrizeModal() {
+      const container = document.getElementById('modalItemsList');
+      container.innerHTML = caseItems.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px;">
+          <span>${i.name}</span>
+          <span style="color:#aaa;">${i.chance}%</span>
         </div>
-        <button class="btn-topup" onclick="openTopupModal()">+ Поповнити</button>
-    </div>
+      `).join('');
+      document.getElementById('prizeModal').style.display = 'flex';
+    }
 
-    <div class="case-container">
-        <h2>Безкоштовний кейс 🎁</h2>
-        <div class="case-box" id="caseBox">📦</div>
-        <p id="timerText" style="color: #8e8e93; font-size: 14px;"></p>
-        <button class="btn-action" id="openBtn" onclick="openCase()" disabled>Завантаження...</button>
-        <button class="btn-action" id="withdrawBtn" onclick="withdraw()" style="background: linear-gradient(135deg, #34c759, #248a3d); margin-top: 15px;" disabled>Вивести 1500 ⭐️</button>
-    </div>
+    function closePrizeModal() {
+      document.getElementById('prizeModal').style.display = 'none';
+    }
 
-    <!-- Модальне вікно поповнення -->
-    <div class="modal" id="topupModal">
-        <div class="modal-content">
-            <h3>Поповнити Stars ⭐️</h3>
-            <button class="modal-btn" onclick="buyStars(100)">+100 ⭐️</button>
-            <button class="modal-btn" onclick="buyStars(500)">+500 ⭐️</button>
-            <button class="modal-btn" onclick="buyStars(1000)">+1000 ⭐️</button>
-            <button class="modal-btn" onclick="closeTopupModal()" style="background: transparent; border: none; color: #ff3b30;">Скасувати</button>
-        </div>
-    </div>
-
-    <!-- Модальне вікно виграшу -->
-    <div class="modal" id="winModal">
-        <div class="modal-content">
-            <h3>Ваш виграш! 🎉</h3>
-            <div id="winIcon" style="font-size: 50px; margin: 10px 0;">🌹</div>
-            <p id="winName" style="font-weight: bold;"></p>
-            <button class="btn-action" id="sellBtn" onclick="sellItem()">Продати за ціною ⭐️</button>
-        </div>
-    </div>
-
-    <script>
-        const tg = window.Telegram?.WebApp;
-        if (tg) tg.expand();
-
-        // Стабільне визначення Telegram ID (щоб не генерувався новий при кожному вході)
-        let telegramId = "test_user_stable";
-        if (tg?.initDataUnsafe?.user?.id) {
-            telegramId = String(tg.initDataUnsafe.user.id);
-        } else {
-            // Якщо відкрили у звичайному браузері — зберігаємо в localStorage щоб ID не стрибав
-            let savedLocalId = localStorage.getItem('local_telegram_id');
-            if (!savedLocalId) {
-                savedLocalId = "browser_user_" + Math.floor(Math.random() * 100000);
-                localStorage.setItem('local_telegram_id', savedLocalId);
-            }
-            telegramId = savedLocalId;
-        }
-
-        console.log("Поточний Telegram ID користувача:", telegramId);
-
-        // Налаштування Supabase
-        const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_QpTiOqr_Uh4viHl7uVTA3A_JDBfNyPZ';
-        
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        const drops = [
-            { name: "Троянда", icon: "🌹", price: 25, chance: 0.40 },
-            { name: "Homemade Cake", icon: "🍰", price: 35, chance: 0.25 },
-            { name: "50 ігрових Stars", icon: "⭐️", price: 50, chance: 0.15 },
-            { name: "Ведмідь", icon: "🧸", price: 100, chance: 0.10 },
-            { name: "Jelly Bunny", icon: "🐰", price: 150, chance: 0.07 },
-            { name: "Snoop Dogg", icon: "🐕", price: 250, chance: 0.03 }
-        ];
-
-        let balance = 0;
-        let lastOpenTime = 0;
-        let currentDrop = null;
-        let isDataLoaded = false;
-
-        // Завантаження даних користувача з Supabase
-        async function initUser() {
-            try {
-                let { data, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('telegram_id', telegramId)
-                    .maybeSingle();
-
-                if (error) {
-                    console.error("Помилка читання з бази:", error);
-                }
-
-                if (!data) {
-                    // Створюємо нового користувача в базі якщо його ще немає
-                    const { data: newData, error: insertError } = await supabaseClient
-                        .from('users')
-                        .insert([{ telegram_id: telegramId, stars_balance: 0, last_case_open_time: 0 }])
-                        .select()
-                        .single();
-                    
-                    if (insertError) {
-                        console.error("Помилка створення користувача:", insertError);
-                    }
-                    if (newData) {
-                        data = newData;
-                    }
-                }
-
-                if (data) {
-                    balance = Number(data.stars_balance) || 0;
-                    lastOpenTime = Number(data.last_case_open_time) || 0;
-                }
-            } catch (err) {
-                console.error("Помилка ініціалізації користувача:", err);
-            } finally {
-                isDataLoaded = true;
-                updateUI();
-            }
-        }
-
-        // Надійне збереження даних через upsert
-        async function saveUserData() {
-            try {
-                const { error } = await supabaseClient
-                    .from('users')
-                    .upsert({ 
-                        telegram_id: telegramId,
-                        stars_balance: balance, 
-                        last_case_open_time: lastOpenTime 
-                    }, { onConflict: 'telegram_id' });
-
-                if (error) {
-                    console.error("Помилка збереження в Supabase:", error);
-                } else {
-                    console.log("Дані успішно збережені! Баланс:", balance);
-                }
-            } catch (err) {
-                console.error("Мережева помилка збереження:", err);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = balance;
-            
-            const openBtn = document.getElementById('openBtn');
-            const timerText = document.getElementById('timerText');
-
-            if (!isDataLoaded) {
-                openBtn.disabled = true;
-                timerText.innerText = "Завантаження...";
-                return;
-            }
-
-            const now = Date.now();
-            const cooldown = 24 * 60 * 60 * 1000; // 24 години
-            const timeLeft = cooldown - (now - lastOpenTime);
-
-            if (timeLeft > 0) {
-                openBtn.disabled = true;
-                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                timerText.innerText = `До наступного: ${hours}г ${minutes}хв`;
-            } else {
-                openBtn.disabled = false;
-                timerText.innerText = "Кейс готовий до відкриття!";
-            }
-
-            const withdrawBtn = document.getElementById('withdrawBtn');
-            withdrawBtn.disabled = balance < 1500;
-        }
-
-        function openCase() {
-            if (!isDataLoaded) return;
-            const openBtn = document.getElementById('openBtn');
-            const caseBox = document.getElementById('caseBox');
-            
-            openBtn.disabled = true;
-            caseBox.classList.add('open-anim');
-
-            setTimeout(async () => {
-                caseBox.classList.remove('open-anim');
-                
-                const rand = Math.random();
-                let cumulative = 0;
-                for (let drop of drops) {
-                    cumulative += drop.chance;
-                    if (rand <= cumulative) {
-                        currentDrop = drop;
-                        break;
-                    }
-                }
-
-                lastOpenTime = Date.now();
-
-                document.getElementById('winIcon').innerText = currentDrop.icon;
-                document.getElementById('winName').innerText = currentDrop.name;
-                document.getElementById('sellBtn').innerText = `Продати за ${currentDrop.price} ⭐️`;
-                document.getElementById('winModal').style.display = 'flex';
-
-                await saveUserData();
-                updateUI();
-            }, 1200);
-        }
-
-        async function sellItem() {
-            if (currentDrop) {
-                balance += currentDrop.price;
-                currentDrop = null;
-            }
-            document.getElementById('winModal').style.display = 'none';
-            
-            await saveUserData();
-            updateUI();
-        }
-
-        function openTopupModal() { document.getElementById('topupModal').style.display = 'flex'; }
-        function closeTopupModal() { document.getElementById('topupModal').style.display = 'none'; }
-
-        async function buyStars(amount) {
-            try {
-                closeTopupModal();
-                
-                const functionUrl = 'https://nlepgjjceiroonynqgoi.supabase.co/functions/v1/invoice';
-                
-                const response = await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    },
-                    body: JSON.stringify({
-                        amount: amount,
-                        telegramId: telegramId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    alert("Помилка: " + data.error);
-                    return;
-                }
-
-                if (data.invoiceUrl && tg && tg.openInvoice) {
-                    tg.openInvoice(data.invoiceUrl, async (status) => {
-                        if (status === 'paid') {
-                            balance += amount;
-                            await saveUserData();
-                            updateUI();
-                            alert(`Успішно! +${amount} ⭐️ додано на ваш баланс.`);
-                        } else {
-                            alert("Оплату було скасовано.");
-                        }
-                    });
-                } else {
-                    balance += amount;
-                    await saveUserData();
-                    updateUI();
-                    alert(`Тестове зарахування: +${amount} ⭐️`);
-                }
-
-            } catch (err) {
-                console.error("Помилка купівлі зірок:", err);
-                alert("Сталася помилка при створенні рахунку.");
-            }
-        }
-
-        async function withdraw() {
-            if (balance >= 1500) {
-                balance -= 1500;
-                alert("Запит на виведення 1500 ⭐️ відправлено адміністратору!");
-                await saveUserData();
-                updateUI();
-            }
-        }
-
-        setInterval(updateUI, 1000);
-        
-        initUser();
-    </script>
+    // Запуск при завантаженні сторінки
+    initRouletteVisual();
+    loadUserData();
+  </script>
 </body>
 </html>
