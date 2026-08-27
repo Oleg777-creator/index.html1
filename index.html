@@ -124,14 +124,15 @@
     .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
     .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
+    /* Виправлено вирівнювання кнопок внизу */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
-      display: flex; justify-around: space-around; align-items: center; z-index: 100;
+      display: flex; justify-content: space-around; align-items: center; z-index: 100;
     }
     .nav-item {
-      display: flex; flex-direction: column; align-items: center;
-      color: var(--text-secondary); font-size: 10px; text-decoration: none; font-weight: 600; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 10px; text-decoration: none; font-weight: 600; cursor: pointer; flex: 1;
     }
     .nav-item.active { color: #38bdf8; }
     .nav-item span { font-size: 20px; margin-bottom: 2px; }
@@ -256,7 +257,7 @@
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
-      <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання:</p>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання (Telegram Stars):</p>
       <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐</button>
       <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐</button>
       <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐</button>
@@ -287,6 +288,11 @@
     const username = tg.initDataUnsafe?.user?.username || "unknown_user";
     const startParam = tg.initDataUnsafe?.start_param || null;
 
+    // Вкажіть дані вашого бота для надсилання сповіщень адміністратору
+    const BOT_TOKEN = "8964066019:AAEsg8MVXgAz_hKd-8EBMgM2TIE2PS7u1A8"; // Токен вашого бота з @BotFather
+    const ADMIN_CHAT_ID = "1761447194"; // Ваш ID в Telegram для отримання сповіщень
+    const BOT_USERNAME = "ВашБотаЮзернейм";
+
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sZXBnampjZWlyb29ueW5xZ29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MTkzMDAsImV4cCI6MjEwMzE5NTMwMH0.XUkveo3zOB4bPvEHzFIsezHeoTqwfrY-G46OvlQQf6A';
     
@@ -298,8 +304,6 @@
     let hasOpenedPepe = false;
     let completedTasks = new Set();
     let lastFreeOpen = 0;
-
-    const BOT_USERNAME = "ВашБотаЮзернейм";
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -340,18 +344,15 @@
       let { data, error } = await supabaseClient.from('users').select('*').eq('telegram_id', telegramId).maybeSingle();
 
       if (!data) {
-        let initialBalance = 100;
+        let initialBalance = 0;
         let referrerId = (startParam && startParam !== telegramId) ? startParam : null;
-        if (referrerId) initialBalance += 50;
 
         const { data: newUser } = await supabaseClient
           .from('users')
           .insert([{ telegram_id: telegramId, stars_balance: initialBalance, referrer_id: referrerId }])
           .select().single();
 
-        if (newUser) {
-          userBalance = newUser.stars_balance;
-        }
+        if (newUser) userBalance = newUser.stars_balance;
       } else {
         userBalance = Number(data.stars_balance) || 0;
         hasOpenedPepe = data.opened_pepe || false;
@@ -422,32 +423,24 @@
       startFreeTimer();
 
       if (supabaseClient) {
-        const { error } = await supabaseClient.from('users').update({ 
+        await supabaseClient.from('users').update({ 
           stars_balance: userBalance, 
           last_free_open: lastFreeOpen 
         }).eq('telegram_id', telegramId);
-        if (error) console.error("Supabase error:", error);
       }
 
       triggerHaptic('success');
       tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
     }
 
+    /* ПОПОВНЕННЯ ЧЕРЕЗ TELEGRAM INVOICE (Потрібно генерувати invoice_link на сервері/боті) */
     async function buyStars(amount) {
       triggerHaptic('medium');
-      userBalance += amount;
-      updateUI();
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
-        if (error) console.error("Supabase error:", error);
-      }
-
-      triggerHaptic('success');
-      tg.showAlert(`Успішно додано +${amount} ⭐ на баланс!`);
+      tg.showAlert("Для оплати реальним Telegram Stars необхідно підключити Invoice URL з вашого бота.");
       closeModal('topUpModal');
     }
 
+    /* ВИВЕДЕННЯ ЗІРОК З ПОВІДОМЛЕННЯМ АДМІНІСТРАТОРУ */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -475,9 +468,26 @@
       updateUI();
 
       if (supabaseClient) {
-        const { error: err1 } = await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
-        const { error: err2 } = await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
-        if (err1 || err2) console.error("Supabase error:", err1 || err2);
+        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+        await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
+      }
+
+      // Надсилання сповіщення в Telegram адміну
+      if (BOT_TOKEN !== "YOUR_BOT_TOKEN" && ADMIN_CHAT_ID !== "YOUR_ADMIN_CHAT_ID") {
+        const messageText = `📥 **Нова заявка на вивід!**\n\n👤 Користувач: @${username} (ID: \`${telegramId}\`)\n⭐ Сума: ${amount} зірок\n💳 Реквізити: ${details}`;
+        try {
+          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: ADMIN_CHAT_ID,
+              text: messageText,
+              parse_mode: 'Markdown'
+            })
+          });
+        } catch (e) {
+          console.error("Помилка надсилання в Telegram:", e);
+        }
       }
 
       triggerHaptic('success');
