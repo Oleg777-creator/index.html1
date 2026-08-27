@@ -17,21 +17,21 @@
       --purple-gradient: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
       --text-main: #ffffff;
       --text-secondary: #8a9bb8;
-      --border-color: rgba(255, 255, 255, 0.07);
+      --border-color: rgba(255, 255, 255, 0.08);
     }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      text-align: center;
       margin: 0;
-      padding: 16px;
-      padding-bottom: 50px;
+      padding: 14px;
+      padding-bottom: 85px;
       user-select: none;
       -webkit-user-select: none;
     }
 
+    /* Шапка балансу */
     .wallet-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -65,88 +65,101 @@
     }
     .btn-icon:active { transform: scale(0.96); }
 
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 20px 0 12px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      text-align: left;
+    }
+
+    /* Сітка 2х2 для кейсів */
+    .cases-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
     .case-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-
-    .case-header { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    .case-sub { color: var(--text-secondary); font-size: 12px; margin-bottom: 16px; }
-
-    .roulette-container {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       position: relative;
-      width: 100%;
-      height: 90px;
-      overflow: hidden;
-      background: #090b0f;
-      border: 2px solid rgba(255, 215, 0, 0.2);
-      border-radius: 14px;
-      margin-bottom: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
     }
 
-    .roulette-pointer {
+    .case-card.limited { border: 1px solid #f59e0b; }
+
+    .case-badge {
       position: absolute;
-      top: 0; left: 50%; transform: translateX(-50%);
-      width: 3px; height: 100%;
-      background: #ff3b30; z-index: 10;
+      top: 10px; right: 10px;
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+      font-size: 9px; font-weight: 800;
+      padding: 3px 7px; border-radius: 8px; text-transform: uppercase;
+    }
+
+    .case-icon { font-size: 48px; margin: 12px 0 8px 0; }
+
+    .case-name { font-weight: 800; font-size: 15px; margin-bottom: 6px; text-align: center; }
+
+    .btn-buy {
+      width: 100%;
+      background: linear-gradient(135deg, #0088cc, #0055ff);
+      border: none; border-radius: 12px;
+      color: white; font-weight: 700;
+      padding: 10px 0; font-size: 13px;
+      cursor: pointer; margin-top: 4px;
+      transition: transform 0.1s ease;
+    }
+    .btn-buy:active { transform: scale(0.96); }
+    .btn-buy.free { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; transform: none; }
+
+    .btn-info {
+      background: transparent; border: none;
+      color: var(--text-secondary); font-size: 11px;
+      margin-top: 6px; cursor: pointer; text-decoration: underline;
+    }
+
+    /* Рулетка (для безкоштовного відкриття) */
+    .roulette-container {
+      position: relative; width: 100%; height: 80px;
+      overflow: hidden; background: #090b0f;
+      border: 1px solid var(--border-color);
+      border-radius: 14px; margin: 12px 0; display: none;
+    }
+    .roulette-pointer {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 3px; height: 100%; background: #ff3b30; z-index: 10;
       box-shadow: 0 0 10px #ff3b30;
     }
-
     .roulette-track {
-      display: flex;
-      position: absolute;
-      left: 0; top: 0; height: 100%;
+      display: flex; position: absolute; left: 0; top: 0; height: 100%;
       transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
       will-change: transform;
     }
-
     .roulette-item {
-      min-width: 90px; height: 100%;
+      min-width: 80px; height: 100%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: linear-gradient(180deg, #1f2636 0%, #181d28 100%);
-      border-right: 1px solid var(--border-color);
-      color: #fff; font-size: 12px; font-weight: 700;
-      box-sizing: border-box;
+      background: #181d28; border-right: 1px solid var(--border-color);
+      color: #fff; font-size: 11px; font-weight: 700; box-sizing: border-box;
     }
-    .roulette-item span { font-size: 22px; margin-bottom: 2px; }
 
-    .btn-main {
-      background: var(--accent-gradient);
-      color: #000; border: none;
-      padding: 13px; border-radius: 14px;
-      font-size: 15px; font-weight: 800;
-      cursor: pointer; width: 100%;
-      box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
-      margin-bottom: 8px;
-      transition: transform 0.1s ease, opacity 0.2s ease;
-    }
-    .btn-main:active { transform: scale(0.98); }
-    .btn-main:disabled { background: #252b38; color: #5a657d; box-shadow: none; cursor: not-allowed; transform: none; }
-
-    .btn-sub {
-      background: var(--purple-gradient);
-      color: #fff; border: none;
-      padding: 10px; border-radius: 12px;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer; width: 100%;
-      transition: transform 0.1s ease;
-    }
-    .btn-sub:active { transform: scale(0.98); }
-
+    /* Модальні вікна */
     .modal {
       display: none; position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(6px);
-      z-index: 100; justify-content: center; align-items: center;
-      padding: 20px;
-      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px);
+      z-index: 200; justify-content: center; align-items: center;
+      padding: 20px; box-sizing: border-box;
     }
-
     .modal-box {
       background: #161b24; border: 1px solid var(--border-color);
       padding: 24px; border-radius: 24px;
@@ -155,6 +168,25 @@
     }
     .modal-box h3 { margin-top: 0; margin-bottom: 12px; font-size: 18px; }
     .modal-box p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+
+    .btn-main {
+      background: var(--accent-gradient); color: #000; border: none;
+      padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800;
+      cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
+    }
+
+    /* Нижня панель навігації */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
+      background: #121620; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      color: var(--text-secondary); font-size: 10px; text-decoration: none; font-weight: 600;
+    }
+    .nav-item.active { color: #38bdf8; }
+    .nav-item span { font-size: 20px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -171,32 +203,66 @@
     </div>
   </div>
 
-  <!-- Безкоштовний Кейс -->
-  <div class="case-card">
-    <div class="case-header">🎁 Безкоштовний кейс</div>
-    <div id="timerDisplay" class="case-sub">Перевірка таймера...</div>
+  <!-- Заголовок Магазину -->
+  <div class="section-title">Магазин Кейсів</div>
+
+  <!-- Сітка кейсів (Дизайн Epic Gift) -->
+  <div class="cases-grid">
     
-    <div class="roulette-container">
-      <div class="roulette-pointer"></div>
-      <div class="roulette-track" id="rouletteTrackFree">
-        <div class="roulette-item"><span>🎁</span>Подарунок</div>
-        <div class="roulette-item"><span>🎁</span>Подарунок</div>
-        <div class="roulette-item"><span>🎁</span>Подарунок</div>
-      </div>
+    <!-- Безкоштовний кейс -->
+    <div class="case-card">
+      <span class="case-badge" style="background: #10b981;">24 HOURS</span>
+      <div class="case-icon">🎁</div>
+      <div class="case-name">Free Box</div>
+      <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Перевірка...</div>
+      <button class="btn-buy free" id="openFreeBtn" onclick="startFreeOpening()">Відкрити</button>
+      <button class="btn-info" onclick="openPrizeModal('free')">📦 Вміст</button>
     </div>
 
-    <button class="btn-main" id="openFreeBtn" onclick="startFreeOpening()">Відкрити безкоштовно</button>
-    <button class="btn-sub" onclick="openPrizeModal('free')">📦 Вміст кейса</button>
+    <!-- Pepe Box -->
+    <div class="case-card">
+      <div class="case-icon">🐸</div>
+      <div class="case-name">Pepe Box</div>
+      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Шанс на Pepe</div>
+      <button class="btn-buy" onclick="startPaidOpening(50)">50 ⭐</button>
+      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
+    </div>
+
+    <!-- Summer Box -->
+    <div class="case-card limited">
+      <span class="case-badge">LIMITED</span>
+      <div class="case-icon">🧢</div>
+      <div class="case-name">Summer Box</div>
+      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
+      <button class="btn-buy" onclick="startPaidOpening(150)">150 ⭐</button>
+      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
+    </div>
+
+    <!-- Onyx Box -->
+    <div class="case-card">
+      <div class="case-icon">💎</div>
+      <div class="case-name">Onyx Black</div>
+      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
+      <button class="btn-buy" onclick="startPaidOpening(300)">300 ⭐</button>
+      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
+    </div>
+
   </div>
 
-  <!-- Преміум Кейс -->
-  <div class="case-card">
-    <div class="case-header">💎 Преміум кейс</div>
-    <div class="case-sub">Вартість відкриття: 50 зірок ⭐</div>
-    
-    <button class="btn-main" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);" onclick="startPaidOpening(50)">Відкрити за 50 ⭐</button>
-    <button class="btn-sub" onclick="openPrizeModal('paid')">📦 Вміст кейса</button>
+  <!-- Рулетка для анімації (прихована до старту) -->
+  <div class="roulette-container" id="rouletteBox">
+    <div class="roulette-pointer"></div>
+    <div class="roulette-track" id="rouletteTrackFree"></div>
   </div>
+
+  <!-- Нижня панель навігації -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item"><span>🎒</span>Рюкзак</a>
+    <a href="#" class="nav-item"><span>👥</span>Друзі</a>
+    <a href="#" class="nav-item active"><span>🏠</span>Головна</a>
+    <a href="#" class="nav-item"><span>🏆</span>Топ</a>
+    <a href="#" class="nav-item"><span>💰</span>Заробити</a>
+  </nav>
 
   <!-- Модальне вікно вмісту -->
   <div id="prizeModal" class="modal">
@@ -229,17 +295,14 @@
   </div>
 
   <script>
-    // Ініціалізація Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.expand();
     tg.ready();
 
-    // Отримуємо Telegram ID як ТЕКСТ (String)
     const rawId = tg.initDataUnsafe?.user?.id;
     const telegramId = rawId ? String(rawId) : "77777777";
     const username = tg.initDataUnsafe?.user?.username || "unknown_user";
 
-    // Налаштування Supabase
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sZXBnampjZWlyb29ueW5xZ29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MTkzMDAsImV4cCI6MjEwMzE5NTMwMH0.XUkveo3zOB4bPvEHzFIsezHeoTqwfrY-G46OvlQQf6A';
     
@@ -275,7 +338,6 @@
       }
     }
 
-    // 1. Надійне завантаження даних користувача
     async function loadUserData() {
       if (!supabaseClient) {
         userBalance = 100;
@@ -290,12 +352,9 @@
           .eq('telegram_id', telegramId)
           .maybeSingle();
 
-        if (error) {
-          console.error("Помилка зчитування Supabase:", error);
-        }
+        if (error) console.error("Помилка зчитування Supabase:", error);
 
         if (!data) {
-          // Створюємо нового користувача, якщо його ще немає
           const { data: newUser, error: insertError } = await supabaseClient
             .from('users')
             .insert([{ telegram_id: telegramId, stars_balance: 100, free_case_timer: 0 }])
@@ -321,7 +380,6 @@
       updateUI();
     }
 
-    // 2. Надійне збереження даних користувача
     async function saveUserData(newBalance, newTimer) {
       userBalance = newBalance;
       if (newTimer !== undefined) lastOpenTime = newTimer;
@@ -338,9 +396,7 @@
             free_case_timer: lastOpenTime
           }, { onConflict: 'telegram_id' });
 
-        if (error) {
-          console.error("Помилка збереження в Supabase:", error);
-        }
+        if (error) console.error("Помилка збереження в Supabase:", error);
       } catch (err) {
         console.error("Загальна помилка збереження:", err);
       }
@@ -358,10 +414,10 @@
         openBtn.disabled = true;
         const hours = Math.floor(timeLeft / (1000 * 60 * 60));
         const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        timerDisplay.innerText = `Наступний кейс через: ${hours}г ${minutes}хв`;
+        timerDisplay.innerText = `${hours}г ${minutes}хв`;
       } else {
         openBtn.disabled = false;
-        timerDisplay.innerText = `Кейс доступний безкоштовно!`;
+        timerDisplay.innerText = `Доступно!`;
       }
     }
 
@@ -381,6 +437,9 @@
       if (now < lastOpenTime + COOLDOWN_TIME) return;
 
       document.getElementById('openFreeBtn').disabled = true;
+      const rouletteBox = document.getElementById('rouletteBox');
+      rouletteBox.style.display = 'block';
+
       const track = document.getElementById('rouletteTrackFree');
       const winningItem = getRandomItem(freeCaseItems);
       const winningIndex = 30;
@@ -395,7 +454,7 @@
       track.style.transform = 'translateX(0px)';
 
       setTimeout(() => {
-        const itemWidth = 90;
+        const itemWidth = 80;
         const offset = (winningIndex * itemWidth) - (160 - (itemWidth / 2));
         track.style.transition = 'transform 4s cubic-bezier(0.05, 0.9, 0.2, 1)';
         track.style.transform = `translateX(-${offset}px)`;
@@ -405,6 +464,7 @@
         triggerHaptic('success');
         saveUserData(userBalance + winningItem.value, Date.now());
         tg.showAlert(`Вітаю! Ви виграли ${winningItem.name}`);
+        rouletteBox.style.display = 'none';
       }, 4100);
     }
 
@@ -420,17 +480,14 @@
       const newBalance = userBalance - cost + winningItem.value;
       saveUserData(newBalance);
       triggerHaptic('success');
-      tg.showAlert(`Ви відкрили преміум кейс і виграли ${winningItem.name}!`);
+      tg.showAlert(`Ви відкрили кейс і виграли ${winningItem.name}!`);
     }
 
     async function buyStars(starsAmount) {
       triggerHaptic('light');
-      
       const btn50 = document.getElementById('btnBuy50');
       const btn200 = document.getElementById('btnBuy200');
-      
-      btn50.disabled = true;
-      btn200.disabled = true;
+      btn50.disabled = true; btn200.disabled = true;
 
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/create-invoice`, {
@@ -439,14 +496,10 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           },
-          body: JSON.stringify({ 
-            telegram_id: telegramId, 
-            amount: starsAmount 
-          })
+          body: JSON.stringify({ telegram_id: telegramId, amount: starsAmount })
         });
 
         const data = await response.json();
-
         if (!response.ok || !data.invoiceLink) {
           triggerHaptic('error');
           tg.showAlert(data.error || "Помилка створення рахунку.");
@@ -473,12 +526,10 @@
         triggerHaptic('error');
         tg.showAlert("Помилка з'єднання з сервером.");
       } finally {
-        btn50.disabled = false;
-        btn200.disabled = false;
+        btn50.disabled = false; btn200.disabled = false;
       }
     }
 
-    // Оновлена функція створення заявки на вивід зі списуванням та інтерактивними кнопками
     async function requestWithdraw() {
       triggerHaptic('light');
       if (userBalance < 500) {
@@ -491,7 +542,6 @@
       closeModal('withdrawModal');
 
       if (supabaseClient) {
-        // 1. Створюємо заявку в Supabase і запитуємо ID створення
         const { data, error } = await supabaseClient
           .from('withdrawals')
           .insert([
@@ -507,11 +557,7 @@
         }
 
         const withdrawalId = data[0].id;
-
-        // 2. Списуємо зірки користувача до 0
         await saveUserData(0);
-
-        // 3. Відправляємо сповіщення адміністратору з кнопками
         sendAdminNotification(withdrawalId, withdrawAmount);
       }
 
@@ -569,12 +615,8 @@
       document.getElementById('prizeModal').style.display = 'flex';
     }
 
-    // Запускаємо читання з бази даних
     loadUserData();
-    
-    // Оновлення таймера кожну хвилину
     setInterval(updateUI, 60000);
   </script>
 </body>
 </html>
-
