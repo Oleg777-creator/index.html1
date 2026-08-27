@@ -5,7 +5,7 @@
   <script>eruda.init();</script>  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star Gift - Cases</title>
+  <title>Star Gift - Cases & Friends</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -14,7 +14,6 @@
       --card-bg: #181d28;
       --accent: #ffd700;
       --accent-gradient: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
-      --purple-gradient: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
       --text-main: #ffffff;
       --text-secondary: #8a9bb8;
       --border-color: rgba(255, 255, 255, 0.08);
@@ -31,6 +30,9 @@
       -webkit-user-select: none;
     }
 
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     /* Шапка балансу */
     .wallet-card {
       background: var(--card-bg);
@@ -38,7 +40,6 @@
       border-radius: 20px;
       padding: 16px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -58,124 +59,60 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: transform 0.1s ease;
+      display: flex; align-items: center; gap: 4px;
     }
     .btn-icon:active { transform: scale(0.96); }
 
     .section-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin: 20px 0 12px 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-secondary);
-      text-align: left;
+      font-size: 16px; font-weight: 800; margin: 20px 0 12px 4px;
+      text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); text-align: left;
     }
 
-    /* Сітка 2х2 для кейсів */
-    .cases-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
+    /* Сітка кейсів */
+    .cases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .case-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-      box-sizing: border-box;
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 14px; display: flex; flex-direction: column; align-items: center; position: relative;
     }
-
     .case-card.limited { border: 1px solid #f59e0b; }
-
     .case-badge {
-      position: absolute;
-      top: 10px; right: 10px;
+      position: absolute; top: 10px; right: 10px;
       background: linear-gradient(90deg, #ff416c, #ff4b2b);
-      font-size: 9px; font-weight: 800;
-      padding: 3px 7px; border-radius: 8px; text-transform: uppercase;
+      font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 8px; text-transform: uppercase;
     }
-
     .case-icon { font-size: 48px; margin: 12px 0 8px 0; }
-
     .case-name { font-weight: 800; font-size: 15px; margin-bottom: 6px; text-align: center; }
 
     .btn-buy {
-      width: 100%;
-      background: linear-gradient(135deg, #0088cc, #0055ff);
-      border: none; border-radius: 12px;
-      color: white; font-weight: 700;
-      padding: 10px 0; font-size: 13px;
-      cursor: pointer; margin-top: 4px;
-      transition: transform 0.1s ease;
+      width: 100%; background: linear-gradient(135deg, #0088cc, #0055ff);
+      border: none; border-radius: 12px; color: white; font-weight: 700; padding: 10px 0; font-size: 13px; cursor: pointer; margin-top: 4px;
     }
-    .btn-buy:active { transform: scale(0.96); }
     .btn-buy.free { background: linear-gradient(135deg, #10b981, #059669); }
-    .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; transform: none; }
+    .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
 
-    .btn-info {
-      background: transparent; border: none;
-      color: var(--text-secondary); font-size: 11px;
-      margin-top: 6px; cursor: pointer; text-decoration: underline;
-    }
+    .btn-info { background: transparent; border: none; color: var(--text-secondary); font-size: 11px; margin-top: 6px; cursor: pointer; text-decoration: underline; }
 
-    /* Рулетка (для безкоштовного відкриття) */
-    .roulette-container {
-      position: relative; width: 100%; height: 80px;
-      overflow: hidden; background: #090b0f;
-      border: 1px solid var(--border-color);
-      border-radius: 14px; margin: 12px 0; display: none;
+    /* Стилі для стильної вкладки Друзі */
+    .referral-card {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 16px;
     }
-    .roulette-pointer {
-      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-      width: 3px; height: 100%; background: #ff3b30; z-index: 10;
-      box-shadow: 0 0 10px #ff3b30;
-    }
-    .roulette-track {
-      display: flex; position: absolute; left: 0; top: 0; height: 100%;
-      transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
-      will-change: transform;
-    }
-    .roulette-item {
-      min-width: 80px; height: 100%;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: #181d28; border-right: 1px solid var(--border-color);
-      color: #fff; font-size: 11px; font-weight: 700; box-sizing: border-box;
-    }
+    .referral-hero-icon { font-size: 56px; margin-bottom: 10px; }
+    .referral-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .referral-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 16px; }
 
-    /* Модальні вікна */
-    .modal {
-      display: none; position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px);
-      z-index: 200; justify-content: center; align-items: center;
-      padding: 20px; box-sizing: border-box;
+    .ref-link-box {
+      background: #090b0f; border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
     }
-    .modal-box {
-      background: #161b24; border: 1px solid var(--border-color);
-      padding: 24px; border-radius: 24px;
-      width: 100%; max-width: 320px; text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    }
-    .modal-box h3 { margin-top: 0; margin-bottom: 12px; font-size: 18px; }
-    .modal-box p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+    .ref-link-text { font-size: 12px; color: var(--text-secondary); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
 
-    .btn-main {
-      background: var(--accent-gradient); color: #000; border: none;
-      padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800;
-      cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
-    }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .stat-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; text-align: center; }
+    .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .stat-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-    /* Нижня панель навігації */
+    /* Нижня панель */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
@@ -183,152 +120,150 @@
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center;
-      color: var(--text-secondary); font-size: 10px; text-decoration: none; font-weight: 600;
+      color: var(--text-secondary); font-size: 10px; text-decoration: none; font-weight: 600; cursor: pointer;
     }
     .nav-item.active { color: #38bdf8; }
     .nav-item span { font-size: 20px; margin-bottom: 2px; }
+
+    /* Модалки */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+    }
+    .modal-box {
+      background: #161b24; border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; width: 100%; max-width: 320px; text-align: center;
+    }
+    .btn-main {
+      background: var(--accent-gradient); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; width: 100%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Блок Балансу -->
-  <div class="wallet-card">
-    <div class="wallet-left">
-      <div class="wallet-label">Ваш баланс зірок</div>
-      <div class="wallet-balance">⭐ <span id="balanceDisplay">0</span></div>
+  <!-- Вкладка Головна (Кейси) -->
+  <div id="tab-home" class="tab-content active">
+    <div class="wallet-card">
+      <div class="wallet-left">
+        <div class="wallet-label">Ваш баланс зірок</div>
+        <div class="wallet-balance">⭐ <span class="balanceDisplay">0</span></div>
+      </div>
+      <div class="wallet-buttons">
+        <button class="btn-icon" onclick="openModal('topUpModal')">💳 Поповнити</button>
+        <button class="btn-icon" onclick="openModal('withdrawModal')">📤 Вивести</button>
+      </div>
     </div>
-    <div class="wallet-buttons">
-      <button class="btn-icon" onclick="openModal('topUpModal')">💳 Поповнити</button>
-      <button class="btn-icon" onclick="openModal('withdrawModal')">📤 Вивести</button>
+
+    <div class="section-title">Магазин Кейсів</div>
+
+    <div class="cases-grid">
+      <div class="case-card">
+        <span class="case-badge" style="background: #10b981;">24 HOURS</span>
+        <div class="case-icon">🎁</div>
+        <div class="case-name">Free Box</div>
+        <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Перевірка...</div>
+        <button class="btn-buy free" id="openFreeBtn" onclick="startFreeOpening()">Відкрити</button>
+      </div>
+
+      <div class="case-card">
+        <div class="case-icon">🐸</div>
+        <div class="case-name">Pepe Box</div>
+        <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Шанс на Pepe</div>
+        <button class="btn-buy" onclick="startPaidOpening(50)">50 ⭐</button>
+      </div>
+
+      <div class="case-card limited">
+        <span class="case-badge">LIMITED</span>
+        <div class="case-icon">🧢</div>
+        <div class="case-name">Summer Box</div>
+        <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
+        <button class="btn-buy" onclick="startPaidOpening(150)">150 ⭐</button>
+      </div>
+
+      <div class="case-card">
+        <div class="case-icon">💎</div>
+        <div class="case-name">Onyx Black</div>
+        <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
+        <button class="btn-buy" onclick="startPaidOpening(300)">300 ⭐</button>
+      </div>
     </div>
   </div>
 
-  <!-- Заголовок Магазину -->
-  <div class="section-title">Магазин Кейсів</div>
+  <!-- Вкладка Друзі (Реферальна програма) -->
+  <div id="tab-friends" class="tab-content">
+    <div class="referral-card">
+      <div class="referral-hero-icon">👥</div>
+      <div class="referral-title">Запрошуй друзів!</div>
+      <div class="referral-desc">Отримуй <b>+50 ⭐</b> за кожного друга, який приєднається за вашим посиланням. Ваш друг також отримає <b>+50 ⭐</b> стартового бонусу!</div>
+      
+      <div class="ref-link-box">
+        <div class="ref-link-text" id="refLinkText">Завантаження...</div>
+        <button class="btn-icon" style="padding: 6px 10px; font-size:11px;" onclick="copyRefLink()">📋 Копіювати</button>
+      </div>
 
-  <!-- Сітка кейсів (Дизайн Epic Gift) -->
-  <div class="cases-grid">
-    
-    <!-- Безкоштовний кейс -->
-    <div class="case-card">
-      <span class="case-badge" style="background: #10b981;">24 HOURS</span>
-      <div class="case-icon">🎁</div>
-      <div class="case-name">Free Box</div>
-      <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Перевірка...</div>
-      <button class="btn-buy free" id="openFreeBtn" onclick="startFreeOpening()">Відкрити</button>
-      <button class="btn-info" onclick="openPrizeModal('free')">📦 Вміст</button>
+      <button class="btn-main" onclick="shareRefLink()">Запросити друга в Telegram</button>
     </div>
 
-    <!-- Pepe Box -->
-    <div class="case-card">
-      <div class="case-icon">🐸</div>
-      <div class="case-name">Pepe Box</div>
-      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Шанс на Pepe</div>
-      <button class="btn-buy" onclick="startPaidOpening(50)">50 ⭐</button>
-      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="friendsCount">0</div>
+        <div class="stat-lbl">Запрошено друзів</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">⭐ <span id="earnedStars">0</span></div>
+        <div class="stat-lbl">Зароблено зірок</div>
+      </div>
     </div>
-
-    <!-- Summer Box -->
-    <div class="case-card limited">
-      <span class="case-badge">LIMITED</span>
-      <div class="case-icon">🧢</div>
-      <div class="case-name">Summer Box</div>
-      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
-      <button class="btn-buy" onclick="startPaidOpening(150)">150 ⭐</button>
-      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
-    </div>
-
-    <!-- Onyx Box -->
-    <div class="case-card">
-      <div class="case-icon">💎</div>
-      <div class="case-name">Onyx Black</div>
-      <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
-      <button class="btn-buy" onclick="startPaidOpening(300)">300 ⭐</button>
-      <button class="btn-info" onclick="openPrizeModal('paid')">📦 Вміст</button>
-    </div>
-
-  </div>
-
-  <!-- Рулетка для анімації (прихована до старту) -->
-  <div class="roulette-container" id="rouletteBox">
-    <div class="roulette-pointer"></div>
-    <div class="roulette-track" id="rouletteTrackFree"></div>
   </div>
 
   <!-- Нижня панель навігації -->
   <nav class="bottom-nav">
-    <a href="#" class="nav-item"><span>🎒</span>Рюкзак</a>
-    <a href="#" class="nav-item"><span>👥</span>Друзі</a>
-    <a href="#" class="nav-item active"><span>🏠</span>Головна</a>
-    <a href="#" class="nav-item"><span>🏆</span>Топ</a>
-    <a href="#" class="nav-item"><span>💰</span>Заробити</a>
+    <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
+    <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
+    <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Головна</div>
+    <div class="nav-item" onclick="switchTab('home')"><span>🏆</span>Топ</div>
+    <div class="nav-item" onclick="switchTab('home')"><span>💰</span>Заробити</div>
   </nav>
 
-  <!-- Модальне вікно вмісту -->
-  <div id="prizeModal" class="modal">
-    <div class="modal-box">
-      <h3>Шанси кейса</h3>
-      <div id="modalItemsList" style="margin: 15px 0; text-align:left; font-size: 13px;"></div>
-      <button class="btn-main" onclick="closeModal('prizeModal')">Закрити</button>
-    </div>
-  </div>
-
-  <!-- Модальне вікно поповнення -->
+  <!-- Модалки -->
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
-      <p>Оберіть пакет поповнення через Telegram Stars:</p>
-      <button class="btn-main" id="btnBuy50" onclick="buyStars(50)">50 зірок ⭐</button>
-      <button class="btn-main" id="btnBuy200" style="margin-top: 8px;" onclick="buyStars(200)">200 зірок ⭐</button>
-      <button class="btn-icon" style="width:100%; justify-content:center; padding: 12px; margin-top: 10px;" onclick="closeModal('topUpModal')">Скасувати</button>
+      <button class="btn-main" onclick="buyStars(50)">50 зірок ⭐</button>
+      <button class="btn-main" style="margin-top: 8px;" onclick="buyStars(200)">200 зірок ⭐</button>
+      <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
 
-  <!-- Модальне вікно виведення -->
   <div id="withdrawModal" class="modal">
     <div class="modal-box">
       <h3>Виведення зірок</h3>
-      <p>Мінімум для виведення: 500 зірок. Заявка надійде адміністратору.</p>
+      <p style="font-size:12px; color:var(--text-secondary);">Мінімум: 500 зірок.</p>
       <button class="btn-main" onclick="requestWithdraw()">Створити заявку</button>
-      <button class="btn-icon" style="width:100%; justify-content:center; padding: 12px; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
+      <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
     </div>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+    tg.expand(); tg.ready();
 
     const rawId = tg.initDataUnsafe?.user?.id;
     const telegramId = rawId ? String(rawId) : "77777777";
     const username = tg.initDataUnsafe?.user?.username || "unknown_user";
+    
+    // Отримуємо ID того, хто запросив із параметрів запуску бота
+    const startParam = tg.initDataUnsafe?.start_param || null;
 
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sZXBnampjZWlyb29ueW5xZ29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MTkzMDAsImV4cCI6MjEwMzE5NTMwMH0.XUkveo3zOB4bPvEHzFIsezHeoTqwfrY-G46OvlQQf6A';
     
     let supabaseClient = null;
-    try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch (e) {
-      console.error("Помилка Supabase:", e);
-    }
+    try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
 
     let userBalance = 0;
     let lastOpenTime = 0;
-    const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
-
-    const paidCaseItems = [
-      { name: "20 Зірок", value: 20, chance: 80.0 },
-      { name: "50 Зірок", value: 50, chance: 15.0 },
-      { name: "100 Зірок", value: 100, chance: 4.5 },
-      { name: "400 Зірок", value: 400, chance: 0.5 }
-    ];
-
-    const freeCaseItems = [
-      { name: "10 Зірок", value: 10, chance: 85.0 },
-      { name: "30 Зірок", value: 30, chance: 12.0 },
-      { name: "50 Зірок", value: 50, chance: 3.0 }
-    ];
+    let myFriendsCount = 0;
+    const BOT_USERNAME = "starsgiftes_bot"; // ⚠️ ЗАМІНІТЬ НА ЮЗЕРНЕЙМ ВАШОГО БОТА БЕЗ @
 
     function triggerHaptic(type = 'light') {
       if (tg.HapticFeedback) {
@@ -338,285 +273,106 @@
       }
     }
 
+    function switchTab(tabName) {
+      triggerHaptic('light');
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      if (tabName === 'friends') {
+        document.getElementById('tab-friends').classList.add('active');
+        document.getElementById('nav-friends').classList.add('active');
+        loadReferralData();
+      } else {
+        document.getElementById('tab-home').classList.add('active');
+        document.getElementById('nav-home').classList.add('active');
+      }
+    }
+
     async function loadUserData() {
-      if (!supabaseClient) {
-        userBalance = 100;
-        updateUI();
-        return;
-      }
+      if (!supabaseClient) return;
 
-      try {
-        let { data, error } = await supabaseClient
-          .from('users')
-          .select('*')
-          .eq('telegram_id', telegramId)
-          .maybeSingle();
+      let { data, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('telegram_id', telegramId)
+        .maybeSingle();
 
-        if (error) console.error("Помилка зчитування Supabase:", error);
+      if (!data) {
+        let initialBalance = 100;
+        let referrerId = null;
 
-        if (!data) {
-          const { data: newUser, error: insertError } = await supabaseClient
-            .from('users')
-            .insert([{ telegram_id: telegramId, stars_balance: 100, free_case_timer: 0 }])
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error("Помилка створення запису:", insertError);
-            userBalance = 100;
-            lastOpenTime = 0;
-          } else if (newUser) {
-            userBalance = Number(newUser.stars_balance) || 100;
-            lastOpenTime = Number(newUser.free_case_timer) || 0;
-          }
-        } else {
-          userBalance = Number(data.stars_balance) || 0;
-          lastOpenTime = Number(data.free_case_timer) || 0;
+        // Обробка рефералки для нового користувача
+        if (startParam && startParam !== telegramId) {
+          referrerId = startParam;
+          initialBalance += 50; // Бонус запрошеному
         }
-      } catch (err) {
-        console.error("Загальна помилка завантаження:", err);
+
+        const { data: newUser } = await supabaseClient
+          .from('users')
+          .insert([{ telegram_id: telegramId, stars_balance: initialBalance, referrer_id: referrerId }])
+          .select().single();
+
+        if (newUser) {
+          userBalance = newUser.stars_balance;
+          lastOpenTime = newUser.free_case_timer || 0;
+        }
+
+        // Зараховуємо нагороду тому, хто запросив
+        if (referrerId) {
+          await supabaseClient.from('referrals').insert([{ referrer_id: referrerId, referred_id: telegramId }]);
+          
+          // Нараховуємо +50 зірок рефереру
+          const { data: refUser } = await supabaseClient.from('users').select('stars_balance').eq('telegram_id', referrerId).single();
+          if (refUser) {
+            await supabaseClient.from('users').update({ stars_balance: (refUser.stars_balance || 0) + 50 }).eq('telegram_id', referrerId);
+          }
+        }
+      } else {
+        userBalance = Number(data.stars_balance) || 0;
+        lastOpenTime = Number(data.free_case_timer) || 0;
       }
-      
+
       updateUI();
     }
 
-    async function saveUserData(newBalance, newTimer) {
-      userBalance = newBalance;
-      if (newTimer !== undefined) lastOpenTime = newTimer;
-      updateUI();
+    async function loadReferralData() {
+      const refLink = `https://t.me/${BOT_USERNAME}?start=${telegramId}`;
+      document.getElementById('refLinkText').innerText = refLink;
 
       if (!supabaseClient) return;
 
-      try {
-        const { error } = await supabaseClient
-          .from('users')
-          .upsert({
-            telegram_id: telegramId,
-            stars_balance: userBalance,
-            free_case_timer: lastOpenTime
-          }, { onConflict: 'telegram_id' });
+      const { data, count } = await supabaseClient
+        .from('referrals')
+        .select('*', { count: 'exact' })
+        .eq('referrer_id', telegramId);
 
-        if (error) console.error("Помилка збереження в Supabase:", error);
-      } catch (err) {
-        console.error("Загальна помилка збереження:", err);
-      }
+      myFriendsCount = count || 0;
+      document.getElementById('friendsCount').innerText = myFriendsCount;
+      document.getElementById('earnedStars').innerText = myFriendsCount * 50;
+    }
+
+    function copyRefLink() {
+      triggerHaptic('success');
+      const refLink = `https://t.me/${BOT_USERNAME}?start=${telegramId}`;
+      navigator.clipboard.writeText(refLink);
+      tg.showAlert("Реферальне посилання скопійовано!");
+    }
+
+    function shareRefLink() {
+      triggerHaptic('light');
+      const refLink = `https://t.me/${BOT_USERNAME}?start=${telegramId}`;
+      const text = "Приєднуйся до Star Gift і отримай +50 ⭐ бонусних зірок!";
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
     }
 
     function updateUI() {
-      document.getElementById('balanceDisplay').innerText = userBalance;
-      
-      const now = Date.now();
-      const timeLeft = (lastOpenTime + COOLDOWN_TIME) - now;
-      const openBtn = document.getElementById('openFreeBtn');
-      const timerDisplay = document.getElementById('timerDisplay');
-
-      if (timeLeft > 0) {
-        openBtn.disabled = true;
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        timerDisplay.innerText = `${hours}г ${minutes}хв`;
-      } else {
-        openBtn.disabled = false;
-        timerDisplay.innerText = `Доступно!`;
-      }
+      document.querySelectorAll('.balanceDisplay').forEach(el => el.innerText = userBalance);
     }
 
-    function getRandomItem(items) {
-      const rand = Math.random() * 100;
-      let cumulative = 0;
-      for (let item of items) {
-        cumulative += item.chance;
-        if (rand <= cumulative) return item;
-      }
-      return items[0];
-    }
-
-    function startFreeOpening() {
-      triggerHaptic('medium');
-      const now = Date.now();
-      if (now < lastOpenTime + COOLDOWN_TIME) return;
-
-      document.getElementById('openFreeBtn').disabled = true;
-      const rouletteBox = document.getElementById('rouletteBox');
-      rouletteBox.style.display = 'block';
-
-      const track = document.getElementById('rouletteTrackFree');
-      const winningItem = getRandomItem(freeCaseItems);
-      const winningIndex = 30;
-
-      let html = '';
-      for (let i = 0; i < 35; i++) {
-        let item = (i === winningIndex) ? winningItem : getRandomItem(freeCaseItems);
-        html += `<div class="roulette-item"><span>🎁</span>${item.name}</div>`;
-      }
-      track.innerHTML = html;
-      track.style.transition = 'none';
-      track.style.transform = 'translateX(0px)';
-
-      setTimeout(() => {
-        const itemWidth = 80;
-        const offset = (winningIndex * itemWidth) - (160 - (itemWidth / 2));
-        track.style.transition = 'transform 4s cubic-bezier(0.05, 0.9, 0.2, 1)';
-        track.style.transform = `translateX(-${offset}px)`;
-      }, 50);
-
-      setTimeout(() => {
-        triggerHaptic('success');
-        saveUserData(userBalance + winningItem.value, Date.now());
-        tg.showAlert(`Вітаю! Ви виграли ${winningItem.name}`);
-        rouletteBox.style.display = 'none';
-      }, 4100);
-    }
-
-    function startPaidOpening(cost) {
-      triggerHaptic('medium');
-      if (userBalance < cost) {
-        triggerHaptic('error');
-        tg.showAlert("Недостатньо зірок на балансі!");
-        return;
-      }
-
-      const winningItem = getRandomItem(paidCaseItems);
-      const newBalance = userBalance - cost + winningItem.value;
-      saveUserData(newBalance);
-      triggerHaptic('success');
-      tg.showAlert(`Ви відкрили кейс і виграли ${winningItem.name}!`);
-    }
-
-    async function buyStars(starsAmount) {
-      triggerHaptic('light');
-      const btn50 = document.getElementById('btnBuy50');
-      const btn200 = document.getElementById('btnBuy200');
-      btn50.disabled = true; btn200.disabled = true;
-
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-invoice`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({ telegram_id: telegramId, amount: starsAmount })
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.invoiceLink) {
-          triggerHaptic('error');
-          tg.showAlert(data.error || "Помилка створення рахунку.");
-          return;
-        }
-
-        closeModal('topUpModal');
-
-        tg.openInvoice(data.invoiceLink, async (status) => {
-          if (status === 'paid') {
-            triggerHaptic('success');
-            tg.showAlert(`Успішно! Зірки зараховуються на ваш баланс...`);
-            setTimeout(loadUserData, 1500);
-          } else if (status === 'cancelled') {
-            console.log("Користувач скасував оплату");
-          } else {
-            triggerHaptic('error');
-            tg.showAlert("Помилка під час здійснення оплати.");
-          }
-        });
-
-      } catch (e) {
-        console.error(e);
-        triggerHaptic('error');
-        tg.showAlert("Помилка з'єднання з сервером.");
-      } finally {
-        btn50.disabled = false; btn200.disabled = false;
-      }
-    }
-
-    async function requestWithdraw() {
-      triggerHaptic('light');
-      if (userBalance < 500) {
-        triggerHaptic('error');
-        tg.showAlert("Для виведення потрібно мінімум 500 зірок!");
-        return;
-      }
-
-      const withdrawAmount = userBalance;
-      closeModal('withdrawModal');
-
-      if (supabaseClient) {
-        const { data, error } = await supabaseClient
-          .from('withdrawals')
-          .insert([
-            { telegram_id: telegramId, username: username, amount: withdrawAmount, status: 'pending' }
-          ])
-          .select();
-
-        if (error || !data || data.length === 0) {
-          console.error(error);
-          triggerHaptic('error');
-          tg.showAlert("Помилка створення заявки. Спробуйте пізніше.");
-          return;
-        }
-
-        const withdrawalId = data[0].id;
-        await saveUserData(0);
-        sendAdminNotification(withdrawalId, withdrawAmount);
-      }
-
-      triggerHaptic('success');
-      tg.showAlert(`Заявку на ${withdrawAmount} ⭐ створено! Зірки тимчасово списано з балансу.`);
-    }
-
-    function sendAdminNotification(withdrawalId, amount) {
-      const BOT_TOKEN = "8964066019:AAEsg8MVXgAz_hKd-8EBMgM2TIE2PS7u1A8";
-      const ADMIN_CHAT_ID = "1761447194";
-
-      const messageText = `🚨 **Нова заявка на вивід #${withdrawalId}**\n\n👤 Користувач: @${username}\n🆔 ID: \`${telegramId}\`\n💰 Сума: **${amount} ⭐**`;
-
-      const replyMarkup = {
-        inline_keyboard: [
-          [
-            { text: "✅ Виплачено", callback_data: `approve_${withdrawalId}_${telegramId}_${amount}` },
-            { text: "❌ Відхилити", callback_data: `reject_${withdrawalId}_${telegramId}_${amount}` }
-          ]
-        ]
-      };
-
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: ADMIN_CHAT_ID,
-          text: messageText,
-          parse_mode: 'Markdown',
-          reply_markup: replyMarkup
-        })
-      });
-    }
-
-    function openModal(id) { 
-      triggerHaptic('light');
-      document.getElementById(id).style.display = 'flex'; 
-    }
-    
-    function closeModal(id) { 
-      triggerHaptic('light');
-      document.getElementById(id).style.display = 'none'; 
-    }
-
-    function openPrizeModal(type) {
-      triggerHaptic('light');
-      const items = type === 'free' ? freeCaseItems : paidCaseItems;
-      const container = document.getElementById('modalItemsList');
-      container.innerHTML = items.map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
-          <span>${i.name}</span>
-          <span style="color:var(--accent);">${i.chance}%</span>
-        </div>
-      `).join('');
-      document.getElementById('prizeModal').style.display = 'flex';
-    }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     loadUserData();
-    setInterval(updateUI, 60000);
   </script>
 </body>
 </html>
