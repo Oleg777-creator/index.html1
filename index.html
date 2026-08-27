@@ -478,6 +478,7 @@
       }
     }
 
+    // Оновлена функція створення заявки на вивід зі списуванням та інтерактивними кнопками
     async function requestWithdraw() {
       triggerHaptic('light');
       if (userBalance < 500) {
@@ -486,23 +487,63 @@
         return;
       }
 
+      const withdrawAmount = userBalance;
       closeModal('withdrawModal');
 
       if (supabaseClient) {
-        const { error } = await supabaseClient.from('withdrawals').insert([
-          { telegram_id: telegramId, username: username, amount: userBalance, status: 'pending' }
-        ]);
+        // 1. Створюємо заявку в Supabase і запитуємо ID створення
+        const { data, error } = await supabaseClient
+          .from('withdrawals')
+          .insert([
+            { telegram_id: telegramId, username: username, amount: withdrawAmount, status: 'pending' }
+          ])
+          .select();
 
-        if (error) {
+        if (error || !data || data.length === 0) {
           console.error(error);
           triggerHaptic('error');
           tg.showAlert("Помилка створення заявки. Спробуйте пізніше.");
           return;
         }
+
+        const withdrawalId = data[0].id;
+
+        // 2. Списуємо зірки користувача до 0
+        await saveUserData(0);
+
+        // 3. Відправляємо сповіщення адміністратору з кнопками
+        sendAdminNotification(withdrawalId, withdrawAmount);
       }
 
       triggerHaptic('success');
-      tg.showAlert("Заявку на виведення успішно створено!");
+      tg.showAlert(`Заявку на ${withdrawAmount} ⭐ створено! Зірки тимчасово списано з балансу.`);
+    }
+
+    function sendAdminNotification(withdrawalId, amount) {
+      const BOT_TOKEN = "8964066019:AAEsg8MVXgAz_hKd-8EBMgM2TIE2PS7u1A8";
+      const ADMIN_CHAT_ID = "1761447194";
+
+      const messageText = `🚨 **Нова заявка на вивід #${withdrawalId}**\n\n👤 Користувач: @${username}\n🆔 ID: \`${telegramId}\`\n💰 Сума: **${amount} ⭐**`;
+
+      const replyMarkup = {
+        inline_keyboard: [
+          [
+            { text: "✅ Виплачено", callback_data: `approve_${withdrawalId}_${telegramId}_${amount}` },
+            { text: "❌ Відхилити", callback_data: `reject_${withdrawalId}_${telegramId}_${amount}` }
+          ]
+        ]
+      };
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: messageText,
+          parse_mode: 'Markdown',
+          reply_markup: replyMarkup
+        })
+      });
     }
 
     function openModal(id) { 
@@ -535,5 +576,5 @@
     setInterval(updateUI, 60000);
   </script>
 </body>
-  </html>
-  
+</html>
+
