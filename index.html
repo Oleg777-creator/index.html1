@@ -124,7 +124,6 @@
     .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
     .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
-    /* Виправлено вирівнювання кнопок внизу */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
@@ -244,7 +243,7 @@
     <div class="tasks-list" id="tasksContainer"></div>
   </div>
 
-  <!-- Нижня панель -->
+  <!-- Нижня панель навігації -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
     <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
@@ -288,7 +287,7 @@
     const username = tg.initDataUnsafe?.user?.username || "unknown_user";
     const startParam = tg.initDataUnsafe?.start_param || null;
 
-    // Вкажіть дані вашого бота для надсилання сповіщень адміністратору
+    // Параметри Telegram Бота
     const BOT_TOKEN = "8964066019:AAEsg8MVXgAz_hKd-8EBMgM2TIE2PS7u1A8"; // Токен вашого бота з @BotFather
     const ADMIN_CHAT_ID = "1761447194"; // Ваш ID в Telegram для отримання сповіщень
     const BOT_USERNAME = "ВашБотаЮзернейм";
@@ -433,14 +432,61 @@
       tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
     }
 
-    /* ПОПОВНЕННЯ ЧЕРЕЗ TELEGRAM INVOICE (Потрібно генерувати invoice_link на сервері/боті) */
+    /* ПОПОВНЕННЯ ВІДРАЗУ В MINI APP ЧЕРЕЗ TELEGRAM STARS INVOICE */
     async function buyStars(amount) {
       triggerHaptic('medium');
-      tg.showAlert("Для оплати реальним Telegram Stars необхідно підключити Invoice URL з вашого бота.");
       closeModal('topUpModal');
+
+      if (BOT_TOKEN === "YOUR_BOT_TOKEN") {
+        tg.showAlert("Вкажіть токен вашого бота в змінній BOT_TOKEN для роботи оплати.");
+        return;
+      }
+
+      try {
+        // Генеруємо платіжне посилання через Telegram Bot API
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `Поповнення ${amount} ⭐`,
+            description: `Придбання ${amount} Telegram Stars`,
+            payload: `buy_stars_${telegramId}_${Date.now()}`,
+            currency: 'XTR',
+            prices: [{ label: `${amount} Stars`, amount: amount }]
+          })
+        });
+
+        const resData = await response.json();
+
+        if (resData.ok && resData.result) {
+          // Відкриваємо шторку оплати прямо в Telegram Mini App
+          tg.openInvoice(resData.result, async (status) => {
+            if (status === 'paid') {
+              triggerHaptic('success');
+              userBalance += amount;
+              updateUI();
+
+              if (supabaseClient) {
+                await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+              }
+
+              tg.showAlert(`Успішно поповнено на ${amount} ⭐!`);
+            } else if (status === 'cancelled') {
+              tg.showAlert("Оплату скасовано.");
+            } else {
+              tg.showAlert("Помилка під час здійснення оплати.");
+            }
+          });
+        } else {
+          tg.showAlert("Не вдалося створити рахунок на оплату.");
+        }
+      } catch (e) {
+        console.error("Invoice Error:", e);
+        tg.showAlert("Помилка підключення до платіжного сервісу.");
+      }
     }
 
-    /* ВИВЕДЕННЯ ЗІРОК З ПОВІДОМЛЕННЯМ АДМІНІСТРАТОРУ */
+    /* ВИВЕДЕННЯ ЗІРОК З ПОВІДОМЛЕННЯМ АДМІНІСТРАТОРУ В ТЕЛЕГРАМ */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -472,7 +518,7 @@
         await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
       }
 
-      // Надсилання сповіщення в Telegram адміну
+      // Надсилання сповіщення про вивід адміну в Telegram
       if (BOT_TOKEN !== "YOUR_BOT_TOKEN" && ADMIN_CHAT_ID !== "YOUR_ADMIN_CHAT_ID") {
         const messageText = `📥 **Нова заявка на вивід!**\n\n👤 Користувач: @${username} (ID: \`${telegramId}\`)\n⭐ Сума: ${amount} зірок\n💳 Реквізити: ${details}`;
         try {
