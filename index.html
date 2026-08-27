@@ -141,7 +141,7 @@
     .nav-item.active { color: #38bdf8; }
     .nav-item span { font-size: 20px; margin-bottom: 2px; }
 
-    /* Модалки */
+    /* Модальні вікна */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
@@ -263,9 +263,9 @@
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
       <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання:</p>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐ (Тест додавання)</button>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐ (Тест додавання)</button>
-      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐</button>
+      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐</button>
       <button class="btn-icon" style="width:100%; justify-content:center;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
@@ -304,7 +304,7 @@
     let hasOpenedPepe = false;
     let completedTasks = new Set();
 
-    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА
+    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА (БЕЗ @)
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -373,22 +373,20 @@
       updateUI();
     }
 
-    /* ПОПОВНЕННЯ (ДОНАТ) */
-    async function buyStars(amount) {
+    /* ПОПОВНЕННЯ ЧЕРЕЗ TELEGRAM INVOICE */
+    function buyStars(amount) {
       triggerHaptic('medium');
-      userBalance += amount;
-      updateUI();
-
-      if (supabaseClient) {
-        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
-      }
-
-      triggerHaptic('success');
-      tg.showAlert(`Успішно поповнено на +${amount} ⭐!`);
+      
+      const dataToSend = JSON.stringify({
+        action: "create_invoice",
+        amount: amount
+      });
+      
+      tg.sendData(dataToSend);
       closeModal('topUpModal');
     }
 
-    /* ВИВЕДЕННЯ ЗІРОК */
+    /* ВІДПРАВКА ЗАЯВКИ НА ВИВЕДЕННЯ В БОТ */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -402,17 +400,17 @@
 
       if (!details) {
         triggerHaptic('error');
-        tg.showAlert("Вкажіть реквізити (юзернейм або гаманець)!");
+        tg.showAlert("Вкажіть реквізити!");
         return;
       }
 
       if (userBalance < amount) {
         triggerHaptic('error');
-        tg.showAlert("Недостатньо зірок на балансі!");
+        tg.showAlert("Недостатньо зірок!");
         return;
       }
 
-      // Списуємо баланс
+      // Списуємо зірки локально і в Supabase
       userBalance -= amount;
       updateUI();
 
@@ -421,8 +419,17 @@
         await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details }]);
       }
 
+      // Відправляємо боту сигнал для сповіщення адміністратора
+      const dataToSend = JSON.stringify({
+        action: "withdraw_request",
+        amount: amount,
+        details: details
+      });
+      
+      tg.sendData(dataToSend);
+
       triggerHaptic('success');
-      tg.showAlert(`Заявку на вивід ${amount} ⭐ успішно створено!`);
+      tg.showAlert(`Заявку на вивід ${amount} ⭐ успішно надіслано!`);
       document.getElementById('withdrawAmount').value = '';
       document.getElementById('withdrawDetails').value = '';
       closeModal('withdrawModal');
