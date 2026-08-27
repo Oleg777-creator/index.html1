@@ -5,7 +5,7 @@
   <script>eruda.init();</script>  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star Gift - Cases & Friends</title>
+  <title>Star Gift - Cases, Friends & Tasks</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -17,6 +17,7 @@
       --text-main: #ffffff;
       --text-secondary: #8a9bb8;
       --border-color: rgba(255, 255, 255, 0.08);
+      --green-btn: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
 
     body {
@@ -87,12 +88,10 @@
       width: 100%; background: linear-gradient(135deg, #0088cc, #0055ff);
       border: none; border-radius: 12px; color: white; font-weight: 700; padding: 10px 0; font-size: 13px; cursor: pointer; margin-top: 4px;
     }
-    .btn-buy.free { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn-buy.free { background: var(--green-btn); }
     .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
 
-    .btn-info { background: transparent; border: none; color: var(--text-secondary); font-size: 11px; margin-top: 6px; cursor: pointer; text-decoration: underline; }
-
-    /* Стилі для стильної вкладки Друзі */
+    /* Вкладка Друзі */
     .referral-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 16px;
@@ -111,6 +110,23 @@
     .stat-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; text-align: center; }
     .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
     .stat-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Вкладка Завдання (Earn) */
+    .tasks-list { display: flex; flex-direction: column; gap: 10px; }
+    .task-item {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .task-left { display: flex; align-items: center; gap: 12px; text-align: left; }
+    .task-icon { font-size: 30px; }
+    .task-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+    .task-reward { font-size: 12px; color: var(--accent); font-weight: 800; display: flex; align-items: center; gap: 4px; }
+    .btn-task {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff;
+      padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
+    .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
     /* Нижня панель */
     .bottom-nav {
@@ -168,7 +184,7 @@
         <div class="case-icon">🐸</div>
         <div class="case-name">Pepe Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Шанс на Pepe</div>
-        <button class="btn-buy" onclick="startPaidOpening(50)">50 ⭐</button>
+        <button class="btn-buy" onclick="startPaidOpening(50, 'pepe')">50 ⭐</button>
       </div>
 
       <div class="case-card limited">
@@ -176,19 +192,19 @@
         <div class="case-icon">🧢</div>
         <div class="case-name">Summer Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
-        <button class="btn-buy" onclick="startPaidOpening(150)">150 ⭐</button>
+        <button class="btn-buy" onclick="startPaidOpening(150, 'summer')">150 ⭐</button>
       </div>
 
       <div class="case-card">
         <div class="case-icon">💎</div>
         <div class="case-name">Onyx Black</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
-        <button class="btn-buy" onclick="startPaidOpening(300)">300 ⭐</button>
+        <button class="btn-buy" onclick="startPaidOpening(300, 'onyx')">300 ⭐</button>
       </div>
     </div>
   </div>
 
-  <!-- Вкладка Друзі (Реферальна програма) -->
+  <!-- Вкладка Друзі -->
   <div id="tab-friends" class="tab-content">
     <div class="referral-card">
       <div class="referral-hero-icon">👥</div>
@@ -215,13 +231,29 @@
     </div>
   </div>
 
+  <!-- Вкладка Завдання (Earn) -->
+  <div id="tab-tasks" class="tab-content">
+    <div class="wallet-card">
+      <div class="wallet-left">
+        <div class="wallet-label">Ваш баланс зірок</div>
+        <div class="wallet-balance">⭐ <span class="balanceDisplay">0</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Виконуй завдання</div>
+
+    <div class="tasks-list" id="tasksContainer">
+      <!-- Динамічні завдання додаються тут -->
+    </div>
+  </div>
+
   <!-- Нижня панель навігації -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
     <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
     <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Головна</div>
     <div class="nav-item" onclick="switchTab('home')"><span>🏆</span>Топ</div>
-    <div class="nav-item" onclick="switchTab('home')"><span>💰</span>Заробити</div>
+    <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>💰</span>Заробити</div>
   </nav>
 
   <!-- Модалки -->
@@ -250,8 +282,6 @@
     const rawId = tg.initDataUnsafe?.user?.id;
     const telegramId = rawId ? String(rawId) : "77777777";
     const username = tg.initDataUnsafe?.user?.username || "unknown_user";
-    
-    // Отримуємо ID того, хто запросив із параметрів запуску бота
     const startParam = tg.initDataUnsafe?.start_param || null;
 
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
@@ -263,7 +293,17 @@
     let userBalance = 0;
     let lastOpenTime = 0;
     let myFriendsCount = 0;
-    const BOT_USERNAME = "starsgiftes_bot"; // ⚠️ ЗАМІНІТЬ НА ЮЗЕРНЕЙМ ВАШОГО БОТА БЕЗ @
+    let hasOpenedPepe = false;
+    let completedTasks = new Set();
+
+    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА
+
+    // Список доступних завдань
+    const tasksData = [
+      { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
+      { id: 'task_ref_3', icon: '👥', title: 'Приведи 3 друзів', reward: 50, type: 'referrals', required: 3 },
+      { id: 'task_story', icon: '📲', title: 'Поділись в історії Telegram', reward: 30, type: 'story' }
+    ];
 
     function triggerHaptic(type = 'light') {
       if (tg.HapticFeedback) {
@@ -282,6 +322,10 @@
         document.getElementById('tab-friends').classList.add('active');
         document.getElementById('nav-friends').classList.add('active');
         loadReferralData();
+      } else if (tabName === 'tasks') {
+        document.getElementById('tab-tasks').classList.add('active');
+        document.getElementById('nav-tasks').classList.add('active');
+        renderTasks();
       } else {
         document.getElementById('tab-home').classList.add('active');
         document.getElementById('nav-home').classList.add('active');
@@ -291,21 +335,13 @@
     async function loadUserData() {
       if (!supabaseClient) return;
 
-      let { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('telegram_id', telegramId)
-        .maybeSingle();
+      // 1. Отримуємо профіль користувача
+      let { data } = await supabaseClient.from('users').select('*').eq('telegram_id', telegramId).maybeSingle();
 
       if (!data) {
         let initialBalance = 100;
-        let referrerId = null;
-
-        // Обробка рефералки для нового користувача
-        if (startParam && startParam !== telegramId) {
-          referrerId = startParam;
-          initialBalance += 50; // Бонус запрошеному
-        }
+        let referrerId = (startParam && startParam !== telegramId) ? startParam : null;
+        if (referrerId) initialBalance += 50;
 
         const { data: newUser } = await supabaseClient
           .from('users')
@@ -314,39 +350,133 @@
 
         if (newUser) {
           userBalance = newUser.stars_balance;
-          lastOpenTime = newUser.free_case_timer || 0;
-        }
-
-        // Зараховуємо нагороду тому, хто запросив
-        if (referrerId) {
-          await supabaseClient.from('referrals').insert([{ referrer_id: referrerId, referred_id: telegramId }]);
-          
-          // Нараховуємо +50 зірок рефереру
-          const { data: refUser } = await supabaseClient.from('users').select('stars_balance').eq('telegram_id', referrerId).single();
-          if (refUser) {
-            await supabaseClient.from('users').update({ stars_balance: (refUser.stars_balance || 0) + 50 }).eq('telegram_id', referrerId);
-          }
         }
       } else {
         userBalance = Number(data.stars_balance) || 0;
         lastOpenTime = Number(data.free_case_timer) || 0;
+        hasOpenedPepe = data.opened_pepe || false;
+      }
+
+      // 2. Отримуємо кількість друзів
+      const { count } = await supabaseClient.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', telegramId);
+      myFriendsCount = count || 0;
+
+      // 3. Отримуємо список виконаних завдань
+      const { data: doneTasks } = await supabaseClient.from('completed_tasks').select('task_id').eq('telegram_id', telegramId);
+      if (doneTasks) {
+        completedTasks = new Set(doneTasks.map(t => t.task_id));
       }
 
       updateUI();
     }
 
+    function renderTasks() {
+      const container = document.getElementById('tasksContainer');
+      container.innerHTML = '';
+
+      tasksData.forEach(task => {
+        const isDone = completedTasks.has(task.id);
+        let canClaim = false;
+        let btnText = 'Виконати';
+        let btnClass = 'btn-task';
+
+        if (isDone) {
+          btnText = 'Виконано ✓';
+          btnClass = 'btn-task done';
+        } else {
+          if (task.type === 'pepe' && hasOpenedPepe) canClaim = true;
+          if (task.type === 'referrals' && myFriendsCount >= task.required) canClaim = true;
+          if (task.type === 'story') canClaim = true;
+
+          if (canClaim) {
+            btnText = 'Забрати';
+            btnClass = 'btn-task claim';
+          }
+        }
+
+        const taskEl = document.createElement('div');
+        taskEl.className = 'task-item';
+        taskEl.innerHTML = `
+          <div class="task-left">
+            <div class="task-icon">${task.icon}</div>
+            <div>
+              <div class="task-title">${task.title}</div>
+              <div class="task-reward">+${task.reward} ⭐</div>
+            </div>
+          </div>
+          <button class="${btnClass}" onclick="handleTaskClick('${task.id}', '${task.type}', ${canClaim})">${btnText}</button>
+        `;
+        container.appendChild(taskEl);
+      });
+    }
+
+    async function handleTaskClick(taskId, taskType, canClaim) {
+      triggerHaptic('light');
+
+      if (completedTasks.has(taskId)) return;
+
+      if (canClaim) {
+        // Забираємо нагороду
+        const task = tasksData.find(t => t.id === taskId);
+        completedTasks.add(taskId);
+        userBalance += task.reward;
+        updateUI();
+
+        if (supabaseClient) {
+          await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+          await supabaseClient.from('completed_tasks').insert([{ telegram_id: telegramId, task_id: taskId }]);
+        }
+
+        triggerHaptic('success');
+        tg.showAlert(`Чудово! Ви отримали +${task.reward} ⭐`);
+        renderTasks();
+      } else {
+        // Якщо ще не виконано — перенаправляємо
+        if (taskType === 'pepe') {
+          switchTab('home');
+        } else if (taskType === 'referrals') {
+          switchTab('friends');
+        } else if (taskType === 'story') {
+          shareStoryTask(taskId);
+        }
+      }
+    }
+
+    function shareStoryTask(taskId) {
+      if (tg.shareToStory) {
+        tg.shareToStory(`https://t.me/${BOT_USERNAME}`);
+      } else {
+        tg.showAlert("Опублікуйте посилання на бота у своїй історії Telegram!");
+      }
+      // Дозволяємо забрати нагороду після публікації
+      setTimeout(() => {
+        handleTaskClick(taskId, 'story', true);
+      }, 2000);
+    }
+
+    async function startPaidOpening(cost, boxType) {
+      triggerHaptic('medium');
+      if (userBalance < cost) {
+        triggerHaptic('error');
+        tg.showAlert("Недостатньо зірок!");
+        return;
+      }
+
+      userBalance -= cost;
+      if (boxType === 'pepe') hasOpenedPepe = true;
+
+      updateUI();
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ stars_balance: userBalance, opened_pepe: hasOpenedPepe }).eq('telegram_id', telegramId);
+      }
+
+      triggerHaptic('success');
+      tg.showAlert(`Ви успішно відкрили кейс!`);
+    }
+
     async function loadReferralData() {
       const refLink = `https://t.me/${BOT_USERNAME}?start=${telegramId}`;
       document.getElementById('refLinkText').innerText = refLink;
-
-      if (!supabaseClient) return;
-
-      const { data, count } = await supabaseClient
-        .from('referrals')
-        .select('*', { count: 'exact' })
-        .eq('referrer_id', telegramId);
-
-      myFriendsCount = count || 0;
       document.getElementById('friendsCount').innerText = myFriendsCount;
       document.getElementById('earnedStars').innerText = myFriendsCount * 50;
     }
