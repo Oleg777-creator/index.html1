@@ -141,7 +141,7 @@
     .nav-item.active { color: #38bdf8; }
     .nav-item span { font-size: 20px; margin-bottom: 2px; }
 
-    /* Модальні вікна */
+    /* Модалки */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
@@ -180,8 +180,8 @@
         <span class="case-badge" style="background: #10b981;">24 HOURS</span>
         <div class="case-icon">🎁</div>
         <div class="case-name">Free Box</div>
-        <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Безкоштовно</div>
-        <button class="btn-buy free" id="openFreeBtn" onclick="startPaidOpening(0, 'free')">Відкрити</button>
+        <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Завантаження...</div>
+        <button class="btn-buy free" id="openFreeBtn" onclick="openFreeCase()">Відкрити</button>
       </div>
 
       <div class="case-card">
@@ -263,9 +263,9 @@
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
       <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання:</p>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐</button>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐</button>
-      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐ (Тест додавання)</button>
       <button class="btn-icon" style="width:100%; justify-content:center;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
@@ -303,8 +303,9 @@
     let myFriendsCount = 0;
     let hasOpenedPepe = false;
     let completedTasks = new Set();
+    let lastFreeOpen = 0;
 
-    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА (БЕЗ @)
+    const BOT_USERNAME = "ВашБотаЮзернейм"; // Вкажіть юзернейм вашого бота без @
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -360,6 +361,7 @@
       } else {
         userBalance = Number(data.stars_balance) || 0;
         hasOpenedPepe = data.opened_pepe || false;
+        lastFreeOpen = data.last_free_open || 0;
       }
 
       const { count } = await supabaseClient.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', telegramId);
@@ -371,22 +373,88 @@
       }
 
       updateUI();
+      startFreeTimer();
     }
 
-    /* ПОПОВНЕННЯ ЧЕРЕЗ TELEGRAM INVOICE */
-    function buyStars(amount) {
+    /* БЕЗКОШТОВНИЙ КЕЙС 24 ГОДИНИ */
+    function startFreeTimer() {
+      const now = Date.now();
+      const cooldown = 24 * 60 * 60 * 1000;
+      const btn = document.getElementById('openFreeBtn');
+      const timerDisplay = document.getElementById('timerDisplay');
+
+      if (now - lastFreeOpen >= cooldown) {
+        btn.disabled = false;
+        btn.innerText = "Відкрити";
+        timerDisplay.innerText = "Доступно зараз";
+      } else {
+        btn.disabled = true;
+        btn.innerText = "Очікування";
+        
+        const updateTimer = () => {
+          const currentTime = Date.now();
+          const remaining = cooldown - (currentTime - lastFreeOpen);
+          if (remaining <= 0) {
+            btn.disabled = false;
+            btn.innerText = "Відкрити";
+            timerDisplay.innerText = "Доступно зараз";
+            clearInterval(timerInterval);
+          } else {
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            timerDisplay.innerText = `${hours}г ${minutes}хв ${seconds}с`;
+          }
+        };
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+      }
+    }
+
+    async function openFreeCase() {
+      const now = Date.now();
+      const cooldown = 24 * 60 * 60 * 1000;
+
+      if (now - lastFreeOpen < cooldown) {
+        tg.showAlert("Кейс буде доступний пізніше!");
+        return;
+      }
+
       triggerHaptic('medium');
-      
-      const dataToSend = JSON.stringify({
-        action: "create_invoice",
-        amount: amount
-      });
-      
-      tg.sendData(dataToSend);
+      const reward = Math.floor(Math.random() * 41) + 10; // Нагорода від 10 до 50 зірок
+      userBalance += reward;
+      lastFreeOpen = now;
+
+      updateUI();
+      startFreeTimer();
+
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ 
+          stars_balance: userBalance, 
+          last_free_open: lastFreeOpen 
+        }).eq('telegram_id', telegramId);
+      }
+
+      triggerHaptic('success');
+      tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
+    }
+
+    /* ПОПОВНЕННЯ (ДОНАТ) */
+    async function buyStars(amount) {
+      triggerHaptic('medium');
+      userBalance += amount;
+      updateUI();
+
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+      }
+
+      triggerHaptic('success');
+      tg.showAlert(`Успішно додано +${amount} ⭐ на баланс!`);
       closeModal('topUpModal');
     }
 
-    /* ВІДПРАВКА ЗАЯВКИ НА ВИВЕДЕННЯ В БОТ */
+    /* ВИВЕДЕННЯ ЗІРОК */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -400,36 +468,26 @@
 
       if (!details) {
         triggerHaptic('error');
-        tg.showAlert("Вкажіть реквізити!");
+        tg.showAlert("Вкажіть реквізити (юзернейм або гаманець)!");
         return;
       }
 
       if (userBalance < amount) {
         triggerHaptic('error');
-        tg.showAlert("Недостатньо зірок!");
+        tg.showAlert("Недостатньо зірок на балансі!");
         return;
       }
 
-      // Списуємо зірки локально і в Supabase
       userBalance -= amount;
       updateUI();
 
       if (supabaseClient) {
         await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
-        await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details }]);
+        await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
       }
 
-      // Відправляємо боту сигнал для сповіщення адміністратора
-      const dataToSend = JSON.stringify({
-        action: "withdraw_request",
-        amount: amount,
-        details: details
-      });
-      
-      tg.sendData(dataToSend);
-
       triggerHaptic('success');
-      tg.showAlert(`Заявку на вивід ${amount} ⭐ успішно надіслано!`);
+      tg.showAlert(`Заявку на вивід ${amount} ⭐ успішно створено!`);
       document.getElementById('withdrawAmount').value = '';
       document.getElementById('withdrawDetails').value = '';
       closeModal('withdrawModal');
