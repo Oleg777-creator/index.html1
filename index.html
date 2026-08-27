@@ -296,9 +296,8 @@
     let hasOpenedPepe = false;
     let completedTasks = new Set();
 
-    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА
+    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА (БЕЗ @)
 
-    // Список доступних завдань
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
       { id: 'task_ref_3', icon: '👥', title: 'Приведи 3 друзів', reward: 50, type: 'referrals', required: 3 },
@@ -335,7 +334,6 @@
     async function loadUserData() {
       if (!supabaseClient) return;
 
-      // 1. Отримуємо профіль користувача
       let { data } = await supabaseClient.from('users').select('*').eq('telegram_id', telegramId).maybeSingle();
 
       if (!data) {
@@ -357,11 +355,9 @@
         hasOpenedPepe = data.opened_pepe || false;
       }
 
-      // 2. Отримуємо кількість друзів
       const { count } = await supabaseClient.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', telegramId);
       myFriendsCount = count || 0;
 
-      // 3. Отримуємо список виконаних завдань
       const { data: doneTasks } = await supabaseClient.from('completed_tasks').select('task_id').eq('telegram_id', telegramId);
       if (doneTasks) {
         completedTasks = new Set(doneTasks.map(t => t.task_id));
@@ -386,7 +382,7 @@
         } else {
           if (task.type === 'pepe' && hasOpenedPepe) canClaim = true;
           if (task.type === 'referrals' && myFriendsCount >= task.required) canClaim = true;
-          if (task.type === 'story') canClaim = true;
+          if (task.type === 'story') canClaim = false; // Потребує натискання для виконання
 
           if (canClaim) {
             btnText = 'Забрати';
@@ -416,7 +412,6 @@
       if (completedTasks.has(taskId)) return;
 
       if (canClaim) {
-        // Забираємо нагороду
         const task = tasksData.find(t => t.id === taskId);
         completedTasks.add(taskId);
         userBalance += task.reward;
@@ -431,7 +426,6 @@
         tg.showAlert(`Чудово! Ви отримали +${task.reward} ⭐`);
         renderTasks();
       } else {
-        // Якщо ще не виконано — перенаправляємо
         if (taskType === 'pepe') {
           switchTab('home');
         } else if (taskType === 'referrals') {
@@ -448,10 +442,11 @@
       } else {
         tg.showAlert("Опублікуйте посилання на бота у своїй історії Telegram!");
       }
-      // Дозволяємо забрати нагороду після публікації
+      
+      // Нараховуємо винагороду і зберігаємо виконання в Supabase
       setTimeout(() => {
         handleTaskClick(taskId, 'story', true);
-      }, 2000);
+      }, 1500);
     }
 
     async function startPaidOpening(cost, boxType) {
