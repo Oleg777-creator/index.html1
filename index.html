@@ -229,7 +229,17 @@
   </div>
 
   <script>
-    // Виправлена адреса Supabase
+    // Ініціалізація Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    // Отримуємо Telegram ID як ТЕКСТ (String)
+    const rawId = tg.initDataUnsafe?.user?.id;
+    const telegramId = rawId ? String(rawId) : "77777777";
+    const username = tg.initDataUnsafe?.user?.username || "unknown_user";
+
+    // Налаштування Supabase
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sZXBnampjZWlyb29ueW5xZ29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MTkzMDAsImV4cCI6MjEwMzE5NTMwMH0.XUkveo3zOB4bPvEHzFIsezHeoTqwfrY-G46OvlQQf6A';
     
@@ -239,11 +249,6 @@
     } catch (e) {
       console.error("Помилка Supabase:", e);
     }
-
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    const telegramId = tg.initDataUnsafe?.user?.id ? Number(tg.initDataUnsafe.user.id) : 77777777;
-    const username = tg.initDataUnsafe?.user?.username || "unknown_user";
 
     let userBalance = 0;
     let lastOpenTime = 0;
@@ -262,7 +267,6 @@
       { name: "50 Зірок", value: 50, chance: 3.0 }
     ];
 
-    // Функція вібрації (Haptic Feedback)
     function triggerHaptic(type = 'light') {
       if (tg.HapticFeedback) {
         if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
@@ -271,6 +275,7 @@
       }
     }
 
+    // 1. Надійне завантаження даних користувача
     async function loadUserData() {
       if (!supabaseClient) {
         userBalance = 100;
@@ -278,25 +283,45 @@
         return;
       }
 
-      let { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('telegram_id', telegramId)
-        .single();
+      try {
+        let { data, error } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('telegram_id', telegramId)
+          .maybeSingle();
 
-      if (error || !data) {
-        await supabaseClient.from('users').insert([
-          { telegram_id: telegramId, stars_balance: 100, free_case_timer: 0 }
-        ]);
-        userBalance = 100;
-        lastOpenTime = 0;
-      } else {
-        userBalance = Number(data.stars_balance) || 0;
-        lastOpenTime = Number(data.free_case_timer) || 0;
+        if (error) {
+          console.error("Помилка зчитування Supabase:", error);
+        }
+
+        if (!data) {
+          // Створюємо нового користувача, якщо його ще немає
+          const { data: newUser, error: insertError } = await supabaseClient
+            .from('users')
+            .insert([{ telegram_id: telegramId, stars_balance: 100, free_case_timer: 0 }])
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error("Помилка створення запису:", insertError);
+            userBalance = 100;
+            lastOpenTime = 0;
+          } else if (newUser) {
+            userBalance = Number(newUser.stars_balance) || 100;
+            lastOpenTime = Number(newUser.free_case_timer) || 0;
+          }
+        } else {
+          userBalance = Number(data.stars_balance) || 0;
+          lastOpenTime = Number(data.free_case_timer) || 0;
+        }
+      } catch (err) {
+        console.error("Загальна помилка завантаження:", err);
       }
+      
       updateUI();
     }
 
+    // 2. Надійне збереження даних користувача
     async function saveUserData(newBalance, newTimer) {
       userBalance = newBalance;
       if (newTimer !== undefined) lastOpenTime = newTimer;
@@ -304,13 +329,21 @@
 
       if (!supabaseClient) return;
 
-      await supabaseClient
-        .from('users')
-        .upsert({
-          telegram_id: telegramId,
-          stars_balance: userBalance,
-          free_case_timer: lastOpenTime
-        }, { onConflict: 'telegram_id' });
+      try {
+        const { error } = await supabaseClient
+          .from('users')
+          .upsert({
+            telegram_id: telegramId,
+            stars_balance: userBalance,
+            free_case_timer: lastOpenTime
+          }, { onConflict: 'telegram_id' });
+
+        if (error) {
+          console.error("Помилка збереження в Supabase:", error);
+        }
+      } catch (err) {
+        console.error("Загальна помилка збереження:", err);
+      }
     }
 
     function updateUI() {
@@ -390,21 +423,22 @@
       tg.showAlert(`Ви відкрили преміум кейс і виграли ${winningItem.name}!`);
     }
 
-    // НАТИВНА ОПЛАТА ЧЕРЕЗ TELEGRAM STARS
     async function buyStars(starsAmount) {
       triggerHaptic('light');
       
       const btn50 = document.getElementById('btnBuy50');
       const btn200 = document.getElementById('btnBuy200');
       
-      // Блокуємо кнопки на час генерації рахунку
       btn50.disabled = true;
       btn200.disabled = true;
 
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/create-invoice`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
           body: JSON.stringify({ 
             telegram_id: telegramId, 
             amount: starsAmount 
@@ -421,12 +455,10 @@
 
         closeModal('topUpModal');
 
-        // Відкриваємо нативне вікно Telegram
         tg.openInvoice(data.invoiceLink, async (status) => {
           if (status === 'paid') {
             triggerHaptic('success');
             tg.showAlert(`Успішно! Зірки зараховуються на ваш баланс...`);
-            // Перечитуємо дані з Supabase, які вже оновив Webhook
             setTimeout(loadUserData, 1500);
           } else if (status === 'cancelled') {
             console.log("Користувач скасував оплату");
@@ -496,7 +528,7 @@
       document.getElementById('prizeModal').style.display = 'flex';
     }
 
-    // Автоматичне завантаження при старті
+    // Запускаємо читання з бази даних
     loadUserData();
     
     // Оновлення таймера кожну хвилину
