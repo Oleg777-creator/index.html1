@@ -149,6 +149,10 @@
     .modal-box {
       background: #161b24; border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; width: 100%; max-width: 320px; text-align: center;
     }
+    .modal-input {
+      width: 100%; padding: 12px; background: #090b0f; border: 1px solid var(--border-color);
+      border-radius: 12px; color: #fff; margin-bottom: 12px; box-sizing: border-box; font-size: 14px; text-align: center;
+    }
     .btn-main {
       background: var(--accent-gradient); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; width: 100%;
     }
@@ -176,8 +180,8 @@
         <span class="case-badge" style="background: #10b981;">24 HOURS</span>
         <div class="case-icon">🎁</div>
         <div class="case-name">Free Box</div>
-        <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Перевірка...</div>
-        <button class="btn-buy free" id="openFreeBtn" onclick="startFreeOpening()">Відкрити</button>
+        <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Безкоштовно</div>
+        <button class="btn-buy free" id="openFreeBtn" onclick="startPaidOpening(0, 'free')">Відкрити</button>
       </div>
 
       <div class="case-card">
@@ -242,12 +246,10 @@
 
     <div class="section-title">Виконуй завдання</div>
 
-    <div class="tasks-list" id="tasksContainer">
-      <!-- Динамічні завдання додаються тут -->
-    </div>
+    <div class="tasks-list" id="tasksContainer"></div>
   </div>
 
-  <!-- Нижня панель навігації -->
+  <!-- Нижня панель -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
     <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
@@ -256,21 +258,28 @@
     <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>💰</span>Заробити</div>
   </nav>
 
-  <!-- Модалки -->
+  <!-- Модальне вікно Поповнення -->
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
-      <button class="btn-main" onclick="buyStars(50)">50 зірок ⭐</button>
-      <button class="btn-main" style="margin-top: 8px;" onclick="buyStars(200)">200 зірок ⭐</button>
-      <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('topUpModal')">Скасувати</button>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання:</p>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐ (Тест додавання)</button>
+      <button class="btn-icon" style="width:100%; justify-content:center;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
 
+  <!-- Модальне вікно Виведення -->
   <div id="withdrawModal" class="modal">
     <div class="modal-box">
       <h3>Виведення зірок</h3>
-      <p style="font-size:12px; color:var(--text-secondary);">Мінімум: 500 зірок.</p>
-      <button class="btn-main" onclick="requestWithdraw()">Створити заявку</button>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Мінімальна сума: 500 ⭐</p>
+      
+      <input type="number" id="withdrawAmount" class="modal-input" placeholder="Кількість зірок (напр. 500)">
+      <input type="text" id="withdrawDetails" class="modal-input" placeholder="Ваш @username або TON гаманець">
+
+      <button class="btn-main" onclick="requestWithdraw()">Подати заявку</button>
       <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
     </div>
   </div>
@@ -291,12 +300,11 @@
     try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
 
     let userBalance = 0;
-    let lastOpenTime = 0;
     let myFriendsCount = 0;
     let hasOpenedPepe = false;
     let completedTasks = new Set();
 
-    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА (БЕЗ @)
+    const BOT_USERNAME = "ВашБотаЮзернейм"; // ⚠️ ВКАЖІТЬ ЮЗЕРНЕЙМ ВАШОГО БОТА
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -351,7 +359,6 @@
         }
       } else {
         userBalance = Number(data.stars_balance) || 0;
-        lastOpenTime = Number(data.free_case_timer) || 0;
         hasOpenedPepe = data.opened_pepe || false;
       }
 
@@ -364,6 +371,61 @@
       }
 
       updateUI();
+    }
+
+    /* ПОПОВНЕННЯ (ДОНАТ) */
+    async function buyStars(amount) {
+      triggerHaptic('medium');
+      userBalance += amount;
+      updateUI();
+
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+      }
+
+      triggerHaptic('success');
+      tg.showAlert(`Успішно поповнено на +${amount} ⭐!`);
+      closeModal('topUpModal');
+    }
+
+    /* ВИВЕДЕННЯ ЗІРОК */
+    async function requestWithdraw() {
+      triggerHaptic('light');
+      const amount = Number(document.getElementById('withdrawAmount').value);
+      const details = document.getElementById('withdrawDetails').value.trim();
+
+      if (!amount || amount < 500) {
+        triggerHaptic('error');
+        tg.showAlert("Мінімальна сума для виведення — 500 ⭐");
+        return;
+      }
+
+      if (!details) {
+        triggerHaptic('error');
+        tg.showAlert("Вкажіть реквізити (юзернейм або гаманець)!");
+        return;
+      }
+
+      if (userBalance < amount) {
+        triggerHaptic('error');
+        tg.showAlert("Недостатньо зірок на балансі!");
+        return;
+      }
+
+      // Списуємо баланс
+      userBalance -= amount;
+      updateUI();
+
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+        await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details }]);
+      }
+
+      triggerHaptic('success');
+      tg.showAlert(`Заявку на вивід ${amount} ⭐ успішно створено!`);
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('withdrawDetails').value = '';
+      closeModal('withdrawModal');
     }
 
     function renderTasks() {
@@ -382,7 +444,7 @@
         } else {
           if (task.type === 'pepe' && hasOpenedPepe) canClaim = true;
           if (task.type === 'referrals' && myFriendsCount >= task.required) canClaim = true;
-          if (task.type === 'story') canClaim = false; // Потребує натискання для виконання
+          if (task.type === 'story') canClaim = false;
 
           if (canClaim) {
             btnText = 'Забрати';
@@ -408,7 +470,6 @@
 
     async function handleTaskClick(taskId, taskType, canClaim) {
       triggerHaptic('light');
-
       if (completedTasks.has(taskId)) return;
 
       if (canClaim) {
@@ -426,13 +487,9 @@
         tg.showAlert(`Чудово! Ви отримали +${task.reward} ⭐`);
         renderTasks();
       } else {
-        if (taskType === 'pepe') {
-          switchTab('home');
-        } else if (taskType === 'referrals') {
-          switchTab('friends');
-        } else if (taskType === 'story') {
-          shareStoryTask(taskId);
-        }
+        if (taskType === 'pepe') switchTab('home');
+        else if (taskType === 'referrals') switchTab('friends');
+        else if (taskType === 'story') shareStoryTask(taskId);
       }
     }
 
@@ -442,8 +499,6 @@
       } else {
         tg.showAlert("Опублікуйте посилання на бота у своїй історії Telegram!");
       }
-      
-      // Нараховуємо винагороду і зберігаємо виконання в Supabase
       setTimeout(() => {
         handleTaskClick(taskId, 'story', true);
       }, 1500);
