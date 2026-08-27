@@ -5,7 +5,7 @@
   <script>eruda.init();</script>  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star Gift - Cases, Friends & Tasks</title>
+  <title>Star Gift - Cases, Friends & Leaderboard</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -124,6 +124,41 @@
     .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
     .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
+    /* СТИЛІ ДЛЯ ВКЛАДКИ ТОП */
+    .podium-container {
+      display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 20px 0 25px 0;
+    }
+    .podium-card {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;
+      padding: 12px 8px; text-align: center; width: 30%; position: relative; display: flex; flex-direction: column; align-items: center;
+    }
+    .podium-card.first { border-color: #ffd700; transform: scale(1.08); z-index: 2; background: linear-gradient(180deg, #242416 0%, #181d28 100%); }
+    .podium-card.second { border-color: #c0c0c0; }
+    .podium-card.third { border-color: #cd7f32; }
+    .podium-crown { position: absolute; top: -14px; font-size: 18px; }
+    .podium-avatar { font-size: 32px; margin-bottom: 4px; }
+    .podium-name { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .podium-stars { font-size: 12px; font-weight: 800; color: var(--accent); margin-top: 4px; }
+
+    .top-list { display: flex; flex-direction: column; gap: 8px; }
+    .top-item {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-item.is-user { border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.05); }
+    .top-left { display: flex; align-items: center; gap: 12px; }
+    .top-rank { font-weight: 800; font-size: 13px; color: var(--text-secondary); width: 20px; }
+    .top-avatar { font-size: 22px; }
+    .top-name { font-size: 13px; font-weight: 700; }
+    .top-stars { font-size: 13px; font-weight: 800; color: var(--accent); }
+
+    .live-status {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: #10b981; font-weight: 600;
+      background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 20px; margin-bottom: 10px;
+    }
+    .pulse-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
@@ -229,6 +264,19 @@
     </div>
   </div>
 
+  <!-- Вкладка ТОП (Лідерборд) -->
+  <div id="tab-top" class="tab-content">
+    <div style="text-align: center; margin-bottom: 10px;">
+      <div class="live-status"><div class="pulse-dot"></div> Оновлюється в реальному часі</div>
+    </div>
+
+    <!-- Піддіум Топ 3 -->
+    <div class="podium-container" id="podiumContainer"></div>
+
+    <div class="section-title">Рейтинг Гравців</div>
+    <div class="top-list" id="topListContainer"></div>
+  </div>
+
   <!-- Вкладка Завдання (Earn) -->
   <div id="tab-tasks" class="tab-content">
     <div class="wallet-card">
@@ -243,16 +291,16 @@
     <div class="tasks-list" id="tasksContainer"></div>
   </div>
 
-  <!-- Нижня панель навігації -->
+  <!-- Нижня панель -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
     <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
     <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Головна</div>
-    <div class="nav-item" onclick="switchTab('home')"><span>🏆</span>Топ</div>
+    <div class="nav-item" id="nav-top" onclick="switchTab('top')"><span>🏆</span>Топ</div>
     <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>💰</span>Заробити</div>
   </nav>
 
-  <!-- Модальне вікно Поповнення -->
+  <!-- Модальні вікна -->
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
@@ -264,7 +312,6 @@
     </div>
   </div>
 
-  <!-- Модальне вікно Виведення -->
   <div id="withdrawModal" class="modal">
     <div class="modal-box">
       <h3>Виведення зірок</h3>
@@ -284,12 +331,11 @@
 
     const rawId = tg.initDataUnsafe?.user?.id;
     const telegramId = rawId ? String(rawId) : "77777777";
-    const username = tg.initDataUnsafe?.user?.username || "unknown_user";
+    const username = tg.initDataUnsafe?.user?.username || "Ви (Гравець)";
     const startParam = tg.initDataUnsafe?.start_param || null;
 
-    // Параметри Telegram Бота
-    const BOT_TOKEN = "8964066019:AAEsg8MVXgAz_hKd-8EBMgM2TIE2PS7u1A8"; // Токен вашого бота з @BotFather
-    const ADMIN_CHAT_ID = "1761447194"; // Ваш ID в Telegram для отримання сповіщень
+    const BOT_TOKEN = "YOUR_BOT_TOKEN"; 
+    const ADMIN_CHAT_ID = "YOUR_ADMIN_CHAT_ID"; 
     const BOT_USERNAME = "ВашБотаЮзернейм";
 
     const SUPABASE_URL = 'https://nlepgjjceiroonynqgoi.supabase.co';
@@ -303,6 +349,17 @@
     let hasOpenedPepe = false;
     let completedTasks = new Set();
     let lastFreeOpen = 0;
+
+    // Базова структура віртуальних гравців
+    let fakeLeaderboard = [
+      { name: "Alex_Crypto", stars: 12450, avatar: "🦁" },
+      { name: "StarHunter", stars: 9800, avatar: "⚡" },
+      { name: "Vip_Trader", stars: 7650, avatar: "👑" },
+      { name: "Maks_TON", stars: 5400, avatar: "🚀" },
+      { name: "Elena_Whale", stars: 4320, avatar: "💎" },
+      { name: "Dmitry_G", stars: 3100, avatar: "🔥" },
+      { name: "CryptoNinja", stars: 2150, avatar: "🥷" }
+    ];
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -331,11 +388,86 @@
         document.getElementById('tab-tasks').classList.add('active');
         document.getElementById('nav-tasks').classList.add('active');
         renderTasks();
+      } else if (tabName === 'top') {
+        document.getElementById('tab-top').classList.add('active');
+        document.getElementById('nav-top').classList.add('active');
+        renderLeaderboard();
       } else {
         document.getElementById('tab-home').classList.add('active');
         document.getElementById('nav-home').classList.add('active');
       }
     }
+
+    /* ФУНКЦІЇ ДЛЯ ВКЛАДКИ ТОП */
+    function renderLeaderboard() {
+      // Формуємо загальний список (гравці + поточний юзер)
+      let currentList = [...fakeLeaderboard];
+      currentList.push({ name: `@${username}`, stars: userBalance, avatar: "😎", isUser: true });
+      
+      // Сортуємо за спаданням зірок
+      currentList.sort((a, b) => b.stars - a.stars);
+
+      const podiumContainer = document.getElementById('podiumContainer');
+      const topListContainer = document.getElementById('topListContainer');
+      
+      podiumContainer.innerHTML = '';
+      topListContainer.innerHTML = '';
+
+      // 1. Малюємо Топ 3
+      const top1 = currentList[0];
+      const top2 = currentList[1];
+      const top3 = currentList[2];
+
+      if (top2) {
+        podiumContainer.appendChild(createPodiumCard(top2, 2, 'second', '🥈'));
+      }
+      if (top1) {
+        podiumContainer.appendChild(createPodiumCard(top1, 1, 'first', '👑'));
+      }
+      if (top3) {
+        podiumContainer.appendChild(createPodiumCard(top3, 3, 'third', '🥉'));
+      }
+
+      // 2. Малюємо решту місць (від 4-го)
+      for (let i = 3; i < currentList.length; i++) {
+        const item = currentList[i];
+        const row = document.createElement('div');
+        row.className = `top-item ${item.isUser ? 'is-user' : ''}`;
+        row.innerHTML = `
+          <div class="top-left">
+            <div class="top-rank">${i + 1}</div>
+            <div class="top-avatar">${item.avatar}</div>
+            <div class="top-name">${item.name}</div>
+          </div>
+          <div class="top-stars">⭐ ${item.stars.toLocaleString()}</div>
+        `;
+        topListContainer.appendChild(row);
+      }
+    }
+
+    function createPodiumCard(player, rank, className, crown) {
+      const card = document.createElement('div');
+      card.className = `podium-card ${className}`;
+      card.innerHTML = `
+        <div class="podium-crown">${crown}</div>
+        <div class="podium-avatar">${player.avatar}</div>
+        <div class="podium-name">${player.name}</div>
+        <div class="podium-stars">⭐ ${player.stars.toLocaleString()}</div>
+      `;
+      return card;
+    }
+
+    // Симуляція оновлення зірок ботів у реальному часі
+    setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * fakeLeaderboard.length);
+      const randomAdd = Math.floor(Math.random() * 50) + 10;
+      fakeLeaderboard[randomIndex].stars += randomAdd;
+
+      // Якщо відкрита вкладка ТОП — оновлюємо вигляд
+      if (document.getElementById('tab-top').classList.contains('active')) {
+        renderLeaderboard();
+      }
+    }, 8000);
 
     async function loadUserData() {
       if (!supabaseClient) return;
@@ -432,7 +564,6 @@
       tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
     }
 
-    /* ПОПОВНЕННЯ ВІДРАЗУ В MINI APP ЧЕРЕЗ TELEGRAM STARS INVOICE */
     async function buyStars(amount) {
       triggerHaptic('medium');
       closeModal('topUpModal');
@@ -443,7 +574,6 @@
       }
 
       try {
-        // Генеруємо платіжне посилання через Telegram Bot API
         const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -459,7 +589,6 @@
         const resData = await response.json();
 
         if (resData.ok && resData.result) {
-          // Відкриваємо шторку оплати прямо в Telegram Mini App
           tg.openInvoice(resData.result, async (status) => {
             if (status === 'paid') {
               triggerHaptic('success');
@@ -486,7 +615,6 @@
       }
     }
 
-    /* ВИВЕДЕННЯ ЗІРОК З ПОВІДОМЛЕННЯМ АДМІНІСТРАТОРУ В ТЕЛЕГРАМ */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -518,7 +646,6 @@
         await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
       }
 
-      // Надсилання сповіщення про вивід адміну в Telegram
       if (BOT_TOKEN !== "YOUR_BOT_TOKEN" && ADMIN_CHAT_ID !== "YOUR_ADMIN_CHAT_ID") {
         const messageText = `📥 **Нова заявка на вивід!**\n\n👤 Користувач: @${username} (ID: \`${telegramId}\`)\n⭐ Сума: ${amount} зірок\n💳 Реквізити: ${details}`;
         try {
@@ -662,6 +789,9 @@
 
     function updateUI() {
       document.querySelectorAll('.balanceDisplay').forEach(el => el.innerText = userBalance);
+      if (document.getElementById('tab-top').classList.contains('active')) {
+        renderLeaderboard();
+      }
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
