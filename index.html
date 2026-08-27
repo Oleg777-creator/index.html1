@@ -34,7 +34,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Шапка балансу */
     .wallet-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -69,7 +68,6 @@
       text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); text-align: left;
     }
 
-    /* Сітка кейсів */
     .cases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .case-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
@@ -91,7 +89,6 @@
     .btn-buy.free { background: var(--green-btn); }
     .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
 
-    /* Вкладка Друзі */
     .referral-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 16px;
@@ -111,7 +108,6 @@
     .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
     .stat-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-    /* Вкладка Завдання (Earn) */
     .tasks-list { display: flex; flex-direction: column; gap: 10px; }
     .task-item {
       background: var(--card-bg); border: 1px solid var(--border-color);
@@ -128,11 +124,10 @@
     .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
     .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
-    /* Нижня панель */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center; z-index: 100;
+      display: flex; justify-around: space-around; align-items: center; z-index: 100;
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center;
@@ -141,7 +136,6 @@
     .nav-item.active { color: #38bdf8; }
     .nav-item span { font-size: 20px; margin-bottom: 2px; }
 
-    /* Модалки */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
@@ -263,9 +257,9 @@
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
       <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 16px;">Оберіть пакет зірок для придбання:</p>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐ (Тест додавання)</button>
-      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐ (Тест додавання)</button>
-      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐ (Тест додавання)</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(50)">50 ⭐</button>
+      <button class="btn-main" style="margin-bottom:8px;" onclick="buyStars(200)">200 ⭐</button>
+      <button class="btn-main" style="margin-bottom:12px;" onclick="buyStars(500)">500 ⭐</button>
       <button class="btn-icon" style="width:100%; justify-content:center;" onclick="closeModal('topUpModal')">Скасувати</button>
     </div>
   </div>
@@ -305,7 +299,7 @@
     let completedTasks = new Set();
     let lastFreeOpen = 0;
 
-    const BOT_USERNAME = "ВашБотаЮзернейм"; // Вкажіть юзернейм вашого бота без @
+    const BOT_USERNAME = "ВашБотаЮзернейм";
 
     const tasksData = [
       { id: 'task_pepe', icon: '🐸', title: 'Відкрий Pepe Box', reward: 50, type: 'pepe' },
@@ -343,7 +337,7 @@
     async function loadUserData() {
       if (!supabaseClient) return;
 
-      let { data } = await supabaseClient.from('users').select('*').eq('telegram_id', telegramId).maybeSingle();
+      let { data, error } = await supabaseClient.from('users').select('*').eq('telegram_id', telegramId).maybeSingle();
 
       if (!data) {
         let initialBalance = 100;
@@ -361,7 +355,7 @@
       } else {
         userBalance = Number(data.stars_balance) || 0;
         hasOpenedPepe = data.opened_pepe || false;
-        lastFreeOpen = data.last_free_open || 0;
+        lastFreeOpen = Number(data.last_free_open) || 0;
       }
 
       const { count } = await supabaseClient.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', telegramId);
@@ -376,7 +370,6 @@
       startFreeTimer();
     }
 
-    /* БЕЗКОШТОВНИЙ КЕЙС 24 ГОДИНИ */
     function startFreeTimer() {
       const now = Date.now();
       const cooldown = 24 * 60 * 60 * 1000;
@@ -421,7 +414,7 @@
       }
 
       triggerHaptic('medium');
-      const reward = Math.floor(Math.random() * 41) + 10; // Нагорода від 10 до 50 зірок
+      const reward = Math.floor(Math.random() * 41) + 10;
       userBalance += reward;
       lastFreeOpen = now;
 
@@ -429,24 +422,25 @@
       startFreeTimer();
 
       if (supabaseClient) {
-        await supabaseClient.from('users').update({ 
+        const { error } = await supabaseClient.from('users').update({ 
           stars_balance: userBalance, 
           last_free_open: lastFreeOpen 
         }).eq('telegram_id', telegramId);
+        if (error) console.error("Supabase error:", error);
       }
 
       triggerHaptic('success');
       tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
     }
 
-    /* ПОПОВНЕННЯ (ДОНАТ) */
     async function buyStars(amount) {
       triggerHaptic('medium');
       userBalance += amount;
       updateUI();
 
       if (supabaseClient) {
-        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+        const { error } = await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+        if (error) console.error("Supabase error:", error);
       }
 
       triggerHaptic('success');
@@ -454,7 +448,6 @@
       closeModal('topUpModal');
     }
 
-    /* ВИВЕДЕННЯ ЗІРОК */
     async function requestWithdraw() {
       triggerHaptic('light');
       const amount = Number(document.getElementById('withdrawAmount').value);
@@ -468,7 +461,7 @@
 
       if (!details) {
         triggerHaptic('error');
-        tg.showAlert("Вкажіть реквізити (юзернейм або гаманець)!");
+        tg.showAlert("Вкажіть реквізити!");
         return;
       }
 
@@ -482,8 +475,9 @@
       updateUI();
 
       if (supabaseClient) {
-        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
-        await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
+        const { error: err1 } = await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+        const { error: err2 } = await supabaseClient.from('withdrawals').insert([{ telegram_id: telegramId, amount: amount, details: details, status: 'pending' }]);
+        if (err1 || err2) console.error("Supabase error:", err1 || err2);
       }
 
       triggerHaptic('success');
