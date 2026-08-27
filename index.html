@@ -312,7 +312,6 @@
     let lastOpenTime = 0;
     const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
 
-    // Шанси для преміум кейса
     const paidCaseItems = [
       { name: "20 Зірок", value: 20, chance: 80.0 },
       { name: "50 Зірок", value: 50, chance: 15.0 },
@@ -440,18 +439,37 @@
       tg.showAlert(`Ви відкрили преміум кейс і виграли ${winningItem.name}!`);
     }
 
-    function buyStars(starsAmount, priceInStars) {
+    // НАТИВНА ОПЛАТА ЧЕРЕЗ SUPABASE EDGE FUNCTION
+    async function buyStars(starsAmount, priceInStars) {
       closeModal('topUpModal');
-      
-      // Відкриває чат з ботом усередині Telegram без переходу в зовнішній браузер
-      const botUsername = "starsgiftes_bot"; // Заміни на юзернейм твого бота без @
-      if (tg.openTelegramLink) {
-        tg.openTelegramLink(`https://t.me/${botUsername}?start=pay_${starsAmount}`);
-      } else {
-        window.open(`https://t.me/${botUsername}?start=pay_${starsAmount}`, '_blank');
+
+      try {
+        let response = await fetch(`${SUPABASE_URL}/functions/v1/create-invoice`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_id: telegramId, amount: priceInStars, stars_amount: starsAmount })
+        });
+        let data = await response.json();
+
+        if (!data.invoiceLink) {
+          tg.showAlert("Помилка створення рахунку.");
+          return;
+        }
+
+        tg.openInvoice(data.invoiceLink, async (status) => {
+          if (status === 'paid') {
+            let newBalance = userBalance + starsAmount;
+            await saveUserData(newBalance);
+            tg.showAlert(`Успішно! Вам нараховано ${starsAmount} ⭐`);
+          } else if (status === 'cancelled') {
+            tg.showAlert("Оплату скасовано.");
+          }
+        });
+
+      } catch (e) {
+        console.error(e);
+        tg.showAlert("Помилка з'єднання з сервером оплати.");
       }
-      
-      tg.showAlert(`Запит на поповнення на ${starsAmount} зірок сформовано! Натисніть «Start» у боті для оплати.`);
     }
 
     async function requestWithdraw() {
