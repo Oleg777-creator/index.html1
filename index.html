@@ -79,13 +79,48 @@
     .case-badge {
       position: absolute; top: 10px; right: 10px;
       background: linear-gradient(90deg, #ff416c, #ff4b2b);
-      font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 8px; text-transform: uppercase; z-index: 2;
+      font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 8px; text-transform: uppercase; z-index: 5;
     }
     .case-icon { font-size: 48px; margin: 12px 0 8px 0; }
     
     .case-img-cover {
-      width: 90px; height: 90px; object-fit: cover; border-radius: 12px; margin: 8px 0;
+      width: 90px; height: 90px; object-fit: cover; border-radius: 12px; display: block;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* АНІМАЦІЯ ЗОЛОТИСТОГО ПЕРЕЛИВУ */
+    .shimmer-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      margin: 8px 0;
+      display: inline-block;
+    }
+
+    .shimmer-wrapper::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        60deg,
+        rgba(255, 215, 0, 0) 20%,
+        rgba(255, 223, 128, 0.3) 45%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(255, 223, 128, 0.3) 55%,
+        rgba(255, 215, 0, 0) 80%
+      );
+      transform: rotate(25deg);
+      animation: goldShimmer 3.5s infinite linear;
+      pointer-events: none;
+    }
+
+    @keyframes goldShimmer {
+      0% { left: -150%; }
+      35% { left: 150%; }
+      100% { left: 150%; }
     }
 
     .case-name { font-weight: 800; font-size: 15px; margin-bottom: 6px; text-align: center; }
@@ -221,7 +256,7 @@
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
       background: #121620; border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center; z-index: 100;
+      display: flex; justify-space-around; align-items: center; z-index: 100;
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -281,7 +316,10 @@
 
       <div class="case-card limited" onclick="openCaseModal('summer')">
         <span class="case-badge">LIMITED</span>
-        <img src="images/cover.jpg.jpg" alt="Summer Box" class="case-img-cover">
+        <!-- КАРТКА З ЗОЛОТИСТИМ ПЕРЕЛИВОМ -->
+        <div class="shimmer-wrapper">
+          <img src="images/cover.jpg.jpg" alt="Summer Box" class="case-img-cover">
+        </div>
         <div class="case-name">Summer Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
         <button class="btn-buy">150 ⭐</button>
@@ -426,7 +464,7 @@
     let currentBoxType = null;
     let isSpinning = false;
 
-    // ЗВУКОВІ ЕФЕКТИ (Створені без зовнішніх файлів через Web Audio API)
+    // ЗВУКОВІ ЕФЕКТИ (через Web Audio API)
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playClickSound() {
@@ -515,7 +553,6 @@
       }
     }
 
-    // ВІДКРИТТЯ МОДАЛЬНОГО ВІКНА КЕЙСА З РУЛЕТКОЮ
     function openCaseModal(type) {
       if (isSpinning) return;
       currentBoxType = type;
@@ -532,7 +569,6 @@
         title.innerText = "Summer Box";
         btn.innerText = "Відкрити за 150 ⭐";
         
-        // Заповнення сітки нагород
         grid.innerHTML = '';
         summerBoxItems.forEach(item => {
           grid.innerHTML += `
@@ -545,7 +581,6 @@
           `;
         });
 
-        // Заповнення стрічки рулетки (генеруємо 40 випадкових елементів для анімації)
         track.innerHTML = '';
         for (let i = 0; i < 40; i++) {
           const randItem = getRandomSummerItem();
@@ -574,7 +609,6 @@
       return summerBoxItems[0];
     }
 
-    // ЗАПУСК АНІМАЦІЇ РУЛЕТКИ
     async function spinRoulette() {
       if (isSpinning) return;
       
@@ -585,7 +619,6 @@
         return;
       }
 
-      // Знімаємо зірки
       userBalance -= cost;
       updateUI();
       if (supabaseClient) {
@@ -599,21 +632,18 @@
       const track = document.getElementById('rouletteTrack');
       const winningItem = getRandomSummerItem();
 
-      // Замінюємо 35-й елемент у стрічці на виграшний
       const items = track.querySelectorAll('.roulette-item');
       const winIndex = 32; 
       items[winIndex].className = `roulette-item ${winningItem.rarity}`;
       items[winIndex].innerHTML = `<img src="${winningItem.img}"><div class="roulette-item-name">${winningItem.name}</div>`;
 
-      // Звук прокручування під час анімації
       let soundInterval = setInterval(() => {
         playClickSound();
         triggerHaptic('light');
       }, 150);
 
-      // Розрахунок точки зупинки рулетки
-      const itemWidth = 90; // 80px + 10px margin
-      const offset = (winIndex * itemWidth) - 135; // вирівнюємо по центру покажчика
+      const itemWidth = 90;
+      const offset = (winIndex * itemWidth) - 135;
 
       track.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.1, 1)';
       track.style.transform = `translateX(-${offset}px)`;
