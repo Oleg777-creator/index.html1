@@ -5,7 +5,7 @@
   <script>eruda.init();</script>  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Star Gift - Cases, Friends & Leaderboard</title>
+  <title>Star Gift - Gaming Platform</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -33,6 +33,60 @@
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+
+    /* LIVE FEED STREAM */
+    .live-feed-container {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      scrollbar-width: none;
+    }
+    .live-feed-container::-webkit-scrollbar { display: none; }
+    
+    .live-feed-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-bg);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      white-space: nowrap;
+      animation: slideIn 0.3s ease-out;
+      border: 1px solid var(--border-color);
+    }
+    @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* LEVEL PROGRESS BAR */
+    .level-box {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border-color);
+    }
+    .level-bar-bg { width: 55%; background: #090b0f; height: 8px; border-radius: 4px; overflow: hidden; }
+    .level-bar-fill { width: 0%; background: var(--accent-gradient); height: 100%; transition: width 0.3s; }
+
+    /* PROMO BANNER */
+    .promo-banner {
+      background: linear-gradient(135deg, #2b1055 0%, #7597de 100%);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .promo-title { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    .promo-desc { font-size: 11px; opacity: 0.85; line-height: 1.3; }
 
     .wallet-card {
       background: var(--card-bg);
@@ -88,7 +142,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
-    /* АНІМАЦІЯ ЗОЛОТИСТОГО ПЕРЕЛИВУ */
     .shimmer-wrapper {
       position: relative;
       overflow: hidden;
@@ -132,7 +185,7 @@
     .btn-buy.free { background: var(--green-btn); }
     .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
 
-    /* СТИЛІ РУЛЕТКИ В МОДАЛЬНОМУ ВІКНІ */
+    /* РУЛЕТКА МОДАЛКА */
     .roulette-modal-box {
       background: #161b24; border: 1px solid var(--border-color); padding: 20px 16px;
       border-radius: 24px; width: 100%; max-width: 360px; text-align: center; position: relative; overflow: hidden;
@@ -185,6 +238,18 @@
     .uncommon .item-tag { background: rgba(30, 255, 0, 0.2); color: #1eff00; }
     .common { border-color: rgba(176, 195, 217, 0.5); }
     .common .item-tag { background: rgba(176, 195, 217, 0.2); color: #b0c5d9; }
+
+    /* РЮКЗАК (ІНВЕНТАР) */
+    .inventory-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .inventory-card {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 12px; display: flex; flex-direction: column; align-items: center; position: relative;
+    }
+    .inventory-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 6px; }
+    .inventory-card .btn-sell {
+      background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ef4444;
+      font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; margin-top: 8px; width: 100%;
+    }
 
     .referral-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
@@ -283,8 +348,34 @@
 </head>
 <body>
 
+  <!-- LIVE FEED STREAM (СТРІЧКА ВИГРАШІВ) -->
+  <div class="live-feed-container" id="liveFeed">
+    <div class="live-feed-item">🔥 @Alex_Crypto виграв Durov’s Cap</div>
+    <div class="live-feed-item">⚡ @Maks_TON виграв Surge Board</div>
+  </div>
+
+  <!-- Вкладка Рюкзак (Інвентар) -->
+  <div id="tab-backpack" class="tab-content">
+    <div class="section-title">Ваш Інвентар</div>
+    <div class="inventory-grid" id="inventoryContainer"></div>
+  </div>
+
   <!-- Вкладка Головна (Кейси) -->
   <div id="tab-home" class="tab-content active">
+
+    <!-- СИСТЕМА РІВНІВ (XP PROGRESS) -->
+    <div class="level-box">
+      <span style="font-size: 11px; font-weight: 800;" id="userLevelTxt">Рівень 1</span>
+      <div class="level-bar-bg"><div class="level-bar-fill" id="levelBarFill"></div></div>
+      <span style="font-size: 10px; color: var(--text-secondary);" id="userXpTxt">0/100 XP</span>
+    </div>
+
+    <!-- ПРОМО БАНЕР -->
+    <div class="promo-banner">
+      <div class="promo-title">☀️ Літній Дроп!</div>
+      <div class="promo-desc">Відкривай Summer Box та отримай ексклюзивні речі Durov's Collection з Smart Adaptive RTP.</div>
+    </div>
+
     <div class="wallet-card">
       <div class="wallet-left">
         <div class="wallet-label">Ваш баланс зірок</div>
@@ -316,12 +407,11 @@
 
       <div class="case-card limited" onclick="openCaseModal('summer')">
         <span class="case-badge">LIMITED</span>
-        <!-- КАРТКА З ЗОЛОТИСТИМ ПЕРЕЛИВОМ -->
         <div class="shimmer-wrapper">
           <img src="images/cover.jpg.jpg" alt="Summer Box" class="case-img-cover">
         </div>
         <div class="case-name">Summer Box</div>
-        <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
+        <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Smart RTP 85%</div>
         <button class="btn-buy">150 ⭐</button>
       </div>
 
@@ -387,7 +477,7 @@
 
   <!-- Нижня панель -->
   <nav class="bottom-nav">
-    <div class="nav-item" onclick="switchTab('home')"><span>🎒</span>Рюкзак</div>
+    <div class="nav-item" id="nav-backpack" onclick="switchTab('backpack')"><span>🎒</span>Рюкзак</div>
     <div class="nav-item" id="nav-friends" onclick="switchTab('friends')"><span>👥</span>Друзі</div>
     <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Головна</div>
     <div class="nav-item" id="nav-top" onclick="switchTab('top')"><span>🏆</span>Топ</div>
@@ -399,7 +489,6 @@
     <div class="roulette-modal-box">
       <h3 id="modalCaseTitle" style="margin: 0 0 10px 0;">Summer Box</h3>
       
-      <!-- Рулетка -->
       <div class="roulette-wrapper">
         <div class="roulette-pointer"></div>
         <div class="roulette-track" id="rouletteTrack"></div>
@@ -433,7 +522,7 @@
       <input type="number" id="withdrawAmount" class="modal-input" placeholder="Кількість зірок (напр. 500)">
       <input type="text" id="withdrawDetails" class="modal-input" placeholder="Ваш @username або TON гаманець">
       <button class="btn-main" onclick="requestWithdraw()">Подати заявку</button>
-      <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
+      <button class="btn-icon" style="width:100%; justify-content:center;" onclick="closeModal('withdrawModal')">Скасувати</button>
     </div>
   </div>
 
@@ -457,6 +546,9 @@
     try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
 
     let userBalance = 0;
+    let userXP = 0;
+    let userLevel = 1;
+    let userInventory = [];
     let myFriendsCount = 0;
     let hasOpenedPepe = false;
     let completedTasks = new Set();
@@ -464,7 +556,21 @@
     let currentBoxType = null;
     let isSpinning = false;
 
-    // ЗВУКОВІ ЕФЕКТИ (через Web Audio API)
+    // SMART ADAPTIVE RTP CONFIGURATION
+    const RTP_CONFIG = {
+      targetRTP: 0.85,      // 85% повернення
+      caseCost: 150,        // Ціна кейса
+      minRTPFactor: 0.4,    // Коефіцієнт при частих виграшах
+      maxRTPFactor: 1.5     // Коефіцієнт для новачків
+    };
+
+    let playerStats = {
+      totalSpent: 0,
+      totalWon: 0,
+      spinsCount: 0
+    };
+
+    // ЗВУКОВІ ЕФЕКТИ
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playClickSound() {
@@ -497,7 +603,6 @@
       osc.stop(audioCtx.currentTime + 0.4);
     }
 
-    // ДАНІ ПРЕДМЕТІВ ДЛЯ SUMMER BOX
     const summerBoxItems = [
       { id: 1, name: "Coconut", price: 40, tag: "Common", rarity: "common", img: "images/coconut.png.jpg", weight: 50 },
       { id: 2, name: "Durov’s Shoes", price: 100, tag: "Uncommon", rarity: "uncommon", img: "images/shoes.png.jpg", weight: 25 },
@@ -535,7 +640,11 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-      if (tabName === 'friends') {
+      if (tabName === 'backpack') {
+        document.getElementById('tab-backpack').classList.add('active');
+        document.getElementById('nav-backpack').classList.add('active');
+        renderInventory();
+      } else if (tabName === 'friends') {
         document.getElementById('tab-friends').classList.add('active');
         document.getElementById('nav-friends').classList.add('active');
         loadReferralData();
@@ -583,7 +692,7 @@
 
         track.innerHTML = '';
         for (let i = 0; i < 40; i++) {
-          const randItem = getRandomSummerItem();
+          const randItem = summerBoxItems[Math.floor(Math.random() * summerBoxItems.length)];
           track.innerHTML += `
             <div class="roulette-item ${randItem.rarity}">
               <img src="${randItem.img}">
@@ -599,12 +708,44 @@
       openModal('rouletteModal');
     }
 
+    // SMART ADAPTIVE RTP АЛГОРИТМ
     function getRandomSummerItem() {
-      const rand = Math.random() * 100;
+      playerStats.totalSpent += RTP_CONFIG.caseCost;
+      
+      let currentRTP = playerStats.totalSpent > 0 
+        ? (playerStats.totalWon / playerStats.totalSpent) 
+        : 0;
+
+      let adaptiveFactor = 1.0;
+      if (playerStats.spinsCount < 3) {
+        adaptiveFactor = 1.3;
+      } else if (currentRTP > RTP_CONFIG.targetRTP) {
+        adaptiveFactor = Math.max(RTP_CONFIG.minRTPFactor, RTP_CONFIG.targetRTP / currentRTP);
+      } else if (currentRTP < RTP_CONFIG.targetRTP) {
+        adaptiveFactor = Math.min(RTP_CONFIG.maxRTPFactor, RTP_CONFIG.targetRTP / Math.max(0.1, currentRTP));
+      }
+
+      let adjustedItems = summerBoxItems.map(item => {
+        let weight = item.weight;
+        if (item.rarity === 'legendary' || item.rarity === 'epic') {
+          weight *= adaptiveFactor;
+        } else if (item.rarity === 'common' && adaptiveFactor < 1.0) {
+          weight *= (1 / adaptiveFactor);
+        }
+        return { ...item, adjustedWeight: weight };
+      });
+
+      let totalWeight = adjustedItems.reduce((acc, i) => acc + i.adjustedWeight, 0);
+      let rand = Math.random() * totalWeight;
       let cumulative = 0;
-      for (let item of summerBoxItems) {
-        cumulative += item.weight;
-        if (rand <= cumulative) return item;
+
+      for (let item of adjustedItems) {
+        cumulative += item.adjustedWeight;
+        if (rand <= cumulative) {
+          playerStats.totalWon += item.price;
+          playerStats.spinsCount++;
+          return item;
+        }
       }
       return summerBoxItems[0];
     }
@@ -620,7 +761,9 @@
       }
 
       userBalance -= cost;
+      addXP(15);
       updateUI();
+
       if (supabaseClient) {
         await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
       }
@@ -652,12 +795,61 @@
         clearInterval(soundInterval);
         playWinSound();
         triggerHaptic('success');
+
+        userInventory.push(winningItem);
+        addLiveFeedItem(`@${username} виграв ${winningItem.name}`);
         
-        tg.showAlert(`🎉 Вітаємо! Ви виграли: ${winningItem.name} (${winningItem.price} ⭐)!`);
+        tg.showAlert(`🎉 Вітаємо! Ви виграли: ${winningItem.name} (${winningItem.price} ⭐)! Предмет додано у Рюкзак.`);
         
         isSpinning = false;
         btn.disabled = false;
       }, 5100);
+    }
+
+    function addXP(amount) {
+      userXP += amount;
+      if (userXP >= 100) {
+        userLevel++;
+        userXP -= 100;
+        tg.showAlert(`🎉 Новий рівень! Вітаємо з досягненням Level ${userLevel}!`);
+      }
+      updateUI();
+    }
+
+    function addLiveFeedItem(text) {
+      const feed = document.getElementById('liveFeed');
+      const item = document.createElement('div');
+      item.className = 'live-feed-item';
+      item.innerText = `⚡ ${text}`;
+      feed.prepend(item);
+    }
+
+    function renderInventory() {
+      const container = document.getElementById('inventoryContainer');
+      container.innerHTML = '';
+      if (userInventory.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text-secondary); font-size:12px; margin-top:20px;">Ваш рюкзак порожній</div>`;
+        return;
+      }
+      userInventory.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="inventory-card ${item.rarity}">
+            <img src="${item.img}">
+            <div class="item-name">${item.name}</div>
+            <button class="btn-sell" onclick="sellItem(${index})">Продати за ${item.price} ⭐</button>
+          </div>
+        `;
+      });
+    }
+
+    function sellItem(index) {
+      const item = userInventory[index];
+      userBalance += item.price;
+      userInventory.splice(index, 1);
+      triggerHaptic('success');
+      updateUI();
+      renderInventory();
+      tg.showAlert(`Предмет продано за ${item.price} ⭐!`);
     }
 
     function renderLeaderboard() {
@@ -989,6 +1181,10 @@
 
     function updateUI() {
       document.querySelectorAll('.balanceDisplay').forEach(el => el.innerText = userBalance);
+      document.getElementById('userLevelTxt').innerText = `Рівень ${userLevel}`;
+      document.getElementById('userXpTxt').innerText = `${userXP}/100 XP`;
+      document.getElementById('levelBarFill').style.width = `${userXP}%`;
+
       if (document.getElementById('tab-top').classList.contains('active')) {
         renderLeaderboard();
       }
