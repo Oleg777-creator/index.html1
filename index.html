@@ -72,7 +72,9 @@
     .case-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: 20px; padding: 14px; display: flex; flex-direction: column; align-items: center; position: relative;
+      cursor: pointer; transition: transform 0.2s;
     }
+    .case-card:active { transform: scale(0.97); }
     .case-card.limited { border: 1px solid #f59e0b; }
     .case-badge {
       position: absolute; top: 10px; right: 10px;
@@ -82,11 +84,7 @@
     .case-icon { font-size: 48px; margin: 12px 0 8px 0; }
     
     .case-img-cover {
-      width: 90px;
-      height: 90px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin: 8px 0;
+      width: 90px; height: 90px; object-fit: cover; border-radius: 12px; margin: 8px 0;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
@@ -99,58 +97,48 @@
     .btn-buy.free { background: var(--green-btn); }
     .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
 
-    /* Спеціальний блок колекції предметів */
-    .box-collections {
-      width: 100%;
-      margin-top: 24px;
+    /* СТИЛІ РУЛЕТКИ В МОДАЛЬНОМУ ВІКНІ */
+    .roulette-modal-box {
+      background: #161b24; border: 1px solid var(--border-color); padding: 20px 16px;
+      border-radius: 24px; width: 100%; max-width: 360px; text-align: center; position: relative; overflow: hidden;
     }
-    .items-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+
+    .roulette-wrapper {
+      position: relative; width: 100%; height: 110px; background: #090b0f;
+      border-radius: 16px; border: 2px solid var(--accent); overflow: hidden; margin: 16px 0;
     }
+
+    .roulette-pointer {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 100%; background: #ff4757; z-index: 10;
+      box-shadow: 0 0 10px #ff4757;
+    }
+
+    .roulette-track {
+      display: flex; align-items: center; position: absolute; left: 0; top: 10px; height: 90px;
+      transition: transform 5s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+
+    .roulette-item {
+      width: 80px; height: 80px; background: var(--card-bg); border-radius: 12px; margin: 0 5px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      flex-shrink: 0; border: 1px solid var(--border-color); box-sizing: border-box;
+    }
+    .roulette-item img { width: 45px; height: 45px; object-fit: contain; }
+    .roulette-item-name { font-size: 9px; font-weight: 700; margin-top: 4px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .items-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; margin-top: 10px; }
     .item-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 12px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 1px solid var(--border-color);
+      background: var(--card-bg); border-radius: 12px; padding: 8px; position: relative;
+      display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-color);
     }
     .item-price {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 6px;
-      border-radius: 6px;
+      position: absolute; top: 4px; right: 4px; background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px); color: var(--accent); font-size: 9px; font-weight: 800; padding: 2px 5px; border-radius: 4px;
     }
-    .item-img {
-      width: 70px;
-      height: 70px;
-      object-fit: contain;
-      margin: 12px 0 8px 0;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-    }
-    .item-name {
-      color: var(--text-main);
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-    .item-tag {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-weight: 700;
-    }
+    .item-img { width: 45px; height: 45px; object-fit: contain; margin: 6px 0 4px 0; }
+    .item-name { color: var(--text-main); font-size: 11px; font-weight: 700; text-align: center; }
+    .item-tag { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; }
 
     .legendary { border-color: rgba(255, 215, 0, 0.5); }
     .legendary .item-tag { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
@@ -198,10 +186,7 @@
     .btn-task.claim { background: var(--accent-gradient); color: #000; border: none; }
     .btn-task.done { background: rgba(255,255,255,0.03); color: var(--text-secondary); border: none; cursor: default; }
 
-    /* СТИЛІ ДЛЯ ВКЛАДКИ ТОП */
-    .podium-container {
-      display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 20px 0 25px 0;
-    }
+    .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 20px 0 25px 0; }
     .podium-card {
       background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;
       padding: 12px 8px; text-align: center; width: 30%; position: relative; display: flex; flex-direction: column; align-items: center;
@@ -279,75 +264,34 @@
     <div class="section-title">Магазин Кейсів</div>
 
     <div class="cases-grid">
-      <div class="case-card">
+      <div class="case-card" onclick="openCaseModal('free')">
         <span class="case-badge" style="background: #10b981;">24 HOURS</span>
         <div class="case-icon">🎁</div>
         <div class="case-name">Free Box</div>
         <div id="timerDisplay" style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Завантаження...</div>
-        <button class="btn-buy free" id="openFreeBtn" onclick="openFreeCase()">Відкрити</button>
+        <button class="btn-buy free" id="openFreeBtn">Відкрити</button>
       </div>
 
-      <div class="case-card">
+      <div class="case-card" onclick="openCaseModal('pepe')">
         <div class="case-icon">🐸</div>
         <div class="case-name">Pepe Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Шанс на Pepe</div>
-        <button class="btn-buy" onclick="startPaidOpening(50, 'pepe')">50 ⭐</button>
+        <button class="btn-buy">50 ⭐</button>
       </div>
 
-      <div class="case-card limited">
+      <div class="case-card limited" onclick="openCaseModal('summer')">
         <span class="case-badge">LIMITED</span>
         <img src="images/cover.jpg.jpg" alt="Summer Box" class="case-img-cover">
         <div class="case-name">Summer Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
-        <button class="btn-buy" onclick="startPaidOpening(150, 'summer')">150 ⭐</button>
+        <button class="btn-buy">150 ⭐</button>
       </div>
 
-      <div class="case-card">
+      <div class="case-card" onclick="openCaseModal('onyx')">
         <div class="case-icon">💎</div>
         <div class="case-name">Onyx Black</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
-        <button class="btn-buy" onclick="startPaidOpening(300, 'onyx')">300 ⭐</button>
-      </div>
-    </div>
-
-    <!-- Розділ предметів Summer Box -->
-    <div class="section-title">Вміст Summer Box</div>
-    <div class="box-collections">
-      <div class="items-grid">
-        <div class="item-card legendary">
-          <div class="item-price">1200 ⭐</div>
-          <img src="images/cap.png.jpg" alt="Durov's Cap" class="item-img">
-          <div class="item-name">Durov’s Cap</div>
-          <div class="item-tag">Legendary</div>
-        </div>
-
-        <div class="item-card epic">
-          <div class="item-price">350 ⭐</div>
-          <img src="images/glasses.png.jpg" alt="Durov's Glasses" class="item-img">
-          <div class="item-name">Durov’s Glasses</div>
-          <div class="item-tag">Epic</div>
-        </div>
-
-        <div class="item-card rare">
-          <div class="item-price">200 ⭐</div>
-          <img src="images/board.png.jpg" alt="Surge Board" class="item-img">
-          <div class="item-name">Surge Board</div>
-          <div class="item-tag">Rare</div>
-        </div>
-
-        <div class="item-card uncommon">
-          <div class="item-price">100 ⭐</div>
-          <img src="images/shoes.png.jpg" alt="Durov's Shoes" class="item-img">
-          <div class="item-name">Durov’s Shoes</div>
-          <div class="item-tag">Uncommon</div>
-        </div>
-
-        <div class="item-card common" style="grid-column: span 2;">
-          <div class="item-price">40 ⭐</div>
-          <img src="images/coconut.png.jpg" alt="Coconut" class="item-img">
-          <div class="item-name">Coconut</div>
-          <div class="item-tag">Common</div>
-        </div>
+        <button class="btn-buy">300 ⭐</button>
       </div>
     </div>
   </div>
@@ -385,9 +329,7 @@
       <div class="live-status"><div class="pulse-dot"></div> Оновлюється в реальному часі</div>
     </div>
 
-    <!-- Піддіум Топ 3 -->
     <div class="podium-container" id="podiumContainer"></div>
-
     <div class="section-title">Рейтинг Гравців</div>
     <div class="top-list" id="topListContainer"></div>
   </div>
@@ -402,7 +344,6 @@
     </div>
 
     <div class="section-title">Виконуй завдання</div>
-
     <div class="tasks-list" id="tasksContainer"></div>
   </div>
 
@@ -415,7 +356,27 @@
     <div class="nav-item" id="nav-tasks" onclick="switchTab('tasks')"><span>💰</span>Заробити</div>
   </nav>
 
-  <!-- Модальні вікна -->
+  <!-- МОДАЛЬНЕ ВІКНО РУЛЕТКИ КЕЙСА -->
+  <div id="rouletteModal" class="modal">
+    <div class="roulette-modal-box">
+      <h3 id="modalCaseTitle" style="margin: 0 0 10px 0;">Summer Box</h3>
+      
+      <!-- Рулетка -->
+      <div class="roulette-wrapper">
+        <div class="roulette-pointer"></div>
+        <div class="roulette-track" id="rouletteTrack"></div>
+      </div>
+
+      <button class="btn-main" id="startSpinBtn" onclick="spinRoulette()">Відкрити за 150 ⭐</button>
+      
+      <div class="section-title" style="margin: 15px 0 8px 0; font-size: 13px;">Можливі нагороди:</div>
+      <div class="items-grid" id="modalItemsGrid"></div>
+
+      <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 12px;" onclick="closeModal('rouletteModal')">Закрити</button>
+    </div>
+  </div>
+
+  <!-- Модальні вікна поповнення та виведення -->
   <div id="topUpModal" class="modal">
     <div class="modal-box">
       <h3>Поповнення зірок</h3>
@@ -431,10 +392,8 @@
     <div class="modal-box">
       <h3>Виведення зірок</h3>
       <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Мінімальна сума: 500 ⭐</p>
-      
       <input type="number" id="withdrawAmount" class="modal-input" placeholder="Кількість зірок (напр. 500)">
       <input type="text" id="withdrawDetails" class="modal-input" placeholder="Ваш @username або TON гаманець">
-
       <button class="btn-main" onclick="requestWithdraw()">Подати заявку</button>
       <button class="btn-icon" style="width:100%; justify-content:center; margin-top: 10px;" onclick="closeModal('withdrawModal')">Скасувати</button>
     </div>
@@ -464,14 +423,49 @@
     let hasOpenedPepe = false;
     let completedTasks = new Set();
     let lastFreeOpen = 0;
+    let currentBoxType = null;
+    let isSpinning = false;
 
-    // Конфігурація Summer Box для майбутньої анімації рулетки
+    // ЗВУКОВІ ЕФЕКТИ (Створені без зовнішніх файлів через Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playClickSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function playWinSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    // ДАНІ ПРЕДМЕТІВ ДЛЯ SUMMER BOX
     const summerBoxItems = [
-      { id: 1, name: "Coconut", price: 40, weight: 55, img: "images/coconut.png.jpg" },
-      { id: 2, name: "Durov’s Shoes", price: 100, weight: 25, img: "images/shoes.png.jpg" },
-      { id: 3, name: "Surge Board", price: 200, weight: 12, img: "images/board.png.jpg" },
-      { id: 4, name: "Durov’s Glasses", price: 350, weight: 6, img: "images/glasses.png.jpg" },
-      { id: 5, name: "Durov’s Cap", price: 1200, weight: 2, img: "images/cap.png.jpg" }
+      { id: 1, name: "Coconut", price: 40, tag: "Common", rarity: "common", img: "images/coconut.png.jpg", weight: 50 },
+      { id: 2, name: "Durov’s Shoes", price: 100, tag: "Uncommon", rarity: "uncommon", img: "images/shoes.png.jpg", weight: 25 },
+      { id: 3, name: "Surge Board", price: 200, tag: "Rare", rarity: "rare", img: "images/board.png.jpg", weight: 15 },
+      { id: 4, name: "Durov’s Glasses", price: 350, tag: "Epic", rarity: "epic", img: "images/glasses.png.jpg", weight: 8 },
+      { id: 5, name: "Durov’s Cap", price: 1200, tag: "Legendary", rarity: "legendary", img: "images/cap.png.jpg", weight: 2 }
     ];
 
     let fakeLeaderboard = [
@@ -519,6 +513,121 @@
         document.getElementById('tab-home').classList.add('active');
         document.getElementById('nav-home').classList.add('active');
       }
+    }
+
+    // ВІДКРИТТЯ МОДАЛЬНОГО ВІКНА КЕЙСА З РУЛЕТКОЮ
+    function openCaseModal(type) {
+      if (isSpinning) return;
+      currentBoxType = type;
+      const modal = document.getElementById('rouletteModal');
+      const title = document.getElementById('modalCaseTitle');
+      const btn = document.getElementById('startSpinBtn');
+      const grid = document.getElementById('modalItemsGrid');
+      const track = document.getElementById('rouletteTrack');
+
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0px)';
+
+      if (type === 'summer') {
+        title.innerText = "Summer Box";
+        btn.innerText = "Відкрити за 150 ⭐";
+        
+        // Заповнення сітки нагород
+        grid.innerHTML = '';
+        summerBoxItems.forEach(item => {
+          grid.innerHTML += `
+            <div class="item-card ${item.rarity}">
+              <div class="item-price">${item.price} ⭐</div>
+              <img src="${item.img}" class="item-img">
+              <div class="item-name">${item.name}</div>
+              <div class="item-tag">${item.tag}</div>
+            </div>
+          `;
+        });
+
+        // Заповнення стрічки рулетки (генеруємо 40 випадкових елементів для анімації)
+        track.innerHTML = '';
+        for (let i = 0; i < 40; i++) {
+          const randItem = getRandomSummerItem();
+          track.innerHTML += `
+            <div class="roulette-item ${randItem.rarity}">
+              <img src="${randItem.img}">
+              <div class="roulette-item-name">${randItem.name}</div>
+            </div>
+          `;
+        }
+      } else {
+        tg.showAlert("Цей кейс поки в розробці!");
+        return;
+      }
+
+      openModal('rouletteModal');
+    }
+
+    function getRandomSummerItem() {
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      for (let item of summerBoxItems) {
+        cumulative += item.weight;
+        if (rand <= cumulative) return item;
+      }
+      return summerBoxItems[0];
+    }
+
+    // ЗАПУСК АНІМАЦІЇ РУЛЕТКИ
+    async function spinRoulette() {
+      if (isSpinning) return;
+      
+      const cost = currentBoxType === 'summer' ? 150 : 0;
+      if (userBalance < cost) {
+        triggerHaptic('error');
+        tg.showAlert("Недостатньо зірок!");
+        return;
+      }
+
+      // Знімаємо зірки
+      userBalance -= cost;
+      updateUI();
+      if (supabaseClient) {
+        await supabaseClient.from('users').update({ stars_balance: userBalance }).eq('telegram_id', telegramId);
+      }
+
+      isSpinning = true;
+      const btn = document.getElementById('startSpinBtn');
+      btn.disabled = true;
+
+      const track = document.getElementById('rouletteTrack');
+      const winningItem = getRandomSummerItem();
+
+      // Замінюємо 35-й елемент у стрічці на виграшний
+      const items = track.querySelectorAll('.roulette-item');
+      const winIndex = 32; 
+      items[winIndex].className = `roulette-item ${winningItem.rarity}`;
+      items[winIndex].innerHTML = `<img src="${winningItem.img}"><div class="roulette-item-name">${winningItem.name}</div>`;
+
+      // Звук прокручування під час анімації
+      let soundInterval = setInterval(() => {
+        playClickSound();
+        triggerHaptic('light');
+      }, 150);
+
+      // Розрахунок точки зупинки рулетки
+      const itemWidth = 90; // 80px + 10px margin
+      const offset = (winIndex * itemWidth) - 135; // вирівнюємо по центру покажчика
+
+      track.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.1, 1)';
+      track.style.transform = `translateX(-${offset}px)`;
+
+      setTimeout(() => {
+        clearInterval(soundInterval);
+        playWinSound();
+        triggerHaptic('success');
+        
+        tg.showAlert(`🎉 Вітаємо! Ви виграли: ${winningItem.name} (${winningItem.price} ⭐)!`);
+        
+        isSpinning = false;
+        btn.disabled = false;
+      }, 5100);
     }
 
     function renderLeaderboard() {
@@ -643,34 +752,6 @@
         updateTimer();
         const timerInterval = setInterval(updateTimer, 1000);
       }
-    }
-
-    async function openFreeCase() {
-      const now = Date.now();
-      const cooldown = 24 * 60 * 60 * 1000;
-
-      if (now - lastFreeOpen < cooldown) {
-        tg.showAlert("Кейс буде доступний пізніше!");
-        return;
-      }
-
-      triggerHaptic('medium');
-      const reward = Math.floor(Math.random() * 41) + 10;
-      userBalance += reward;
-      lastFreeOpen = now;
-
-      updateUI();
-      startFreeTimer();
-
-      if (supabaseClient) {
-        await supabaseClient.from('users').update({ 
-          stars_balance: userBalance, 
-          last_free_open: lastFreeOpen 
-        }).eq('telegram_id', telegramId);
-      }
-
-      triggerHaptic('success');
-      tg.showAlert(`Вітаємо! Ви виграли +${reward} ⭐!`);
     }
 
     async function buyStars(amount) {
@@ -855,26 +936,6 @@
       }, 1500);
     }
 
-    async function startPaidOpening(cost, boxType) {
-      triggerHaptic('medium');
-      if (userBalance < cost) {
-        triggerHaptic('error');
-        tg.showAlert("Недостатньо зірок!");
-        return;
-      }
-
-      userBalance -= cost;
-      if (boxType === 'pepe') hasOpenedPepe = true;
-
-      updateUI();
-      if (supabaseClient) {
-        await supabaseClient.from('users').update({ stars_balance: userBalance, opened_pepe: hasOpenedPepe }).eq('telegram_id', telegramId);
-      }
-
-      triggerHaptic('success');
-      tg.showAlert(`Ви успішно відкрили кейс!`);
-    }
-
     async function loadReferralData() {
       const refLink = `https://t.me/${BOT_USERNAME}?start=${telegramId}`;
       document.getElementById('refLinkText').innerText = refLink;
@@ -904,7 +965,10 @@
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function closeModal(id) { 
+      if (isSpinning) return; 
+      document.getElementById(id).style.display = 'none'; 
+    }
 
     loadUserData();
   </script>
