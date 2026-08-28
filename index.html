@@ -77,9 +77,19 @@
     .case-badge {
       position: absolute; top: 10px; right: 10px;
       background: linear-gradient(90deg, #ff416c, #ff4b2b);
-      font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 8px; text-transform: uppercase;
+      font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 8px; text-transform: uppercase; z-index: 2;
     }
     .case-icon { font-size: 48px; margin: 12px 0 8px 0; }
+    
+    .case-img-cover {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 8px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
     .case-name { font-weight: 800; font-size: 15px; margin-bottom: 6px; text-align: center; }
 
     .btn-buy {
@@ -88,6 +98,70 @@
     }
     .btn-buy.free { background: var(--green-btn); }
     .btn-buy:disabled { background: #252b38; color: #5a657d; cursor: not-allowed; }
+
+    /* Спеціальний блок колекції предметів */
+    .box-collections {
+      width: 100%;
+      margin-top: 24px;
+    }
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .item-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid var(--border-color);
+    }
+    .item-price {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+    .item-img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      margin: 12px 0 8px 0;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+    .item-name {
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .item-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .legendary { border-color: rgba(255, 215, 0, 0.5); }
+    .legendary .item-tag { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+    .epic { border-color: rgba(163, 53, 238, 0.5); }
+    .epic .item-tag { background: rgba(163, 53, 238, 0.2); color: #a335ee; }
+    .rare { border-color: rgba(0, 112, 221, 0.5); }
+    .rare .item-tag { background: rgba(0, 112, 221, 0.2); color: #0070dd; }
+    .uncommon { border-color: rgba(30, 255, 0, 0.5); }
+    .uncommon .item-tag { background: rgba(30, 255, 0, 0.2); color: #1eff00; }
+    .common { border-color: rgba(176, 195, 217, 0.5); }
+    .common .item-tag { background: rgba(176, 195, 217, 0.2); color: #b0c5d9; }
 
     .referral-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
@@ -222,7 +296,7 @@
 
       <div class="case-card limited">
         <span class="case-badge">LIMITED</span>
-        <div class="case-icon">🧢</div>
+        <img src="images/cover.jpg.jpg" alt="Summer Box" class="case-img-cover">
         <div class="case-name">Summer Box</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Літня колекція</div>
         <button class="btn-buy" onclick="startPaidOpening(150, 'summer')">150 ⭐</button>
@@ -233,6 +307,47 @@
         <div class="case-name">Onyx Black</div>
         <div style="font-size:10px; color:var(--text-secondary); margin-bottom:6px;">Ексклюзив</div>
         <button class="btn-buy" onclick="startPaidOpening(300, 'onyx')">300 ⭐</button>
+      </div>
+    </div>
+
+    <!-- Розділ предметів Summer Box -->
+    <div class="section-title">Вміст Summer Box</div>
+    <div class="box-collections">
+      <div class="items-grid">
+        <div class="item-card legendary">
+          <div class="item-price">1200 ⭐</div>
+          <img src="images/cap.png.jpg" alt="Durov's Cap" class="item-img">
+          <div class="item-name">Durov’s Cap</div>
+          <div class="item-tag">Legendary</div>
+        </div>
+
+        <div class="item-card epic">
+          <div class="item-price">350 ⭐</div>
+          <img src="images/glasses.png.jpg" alt="Durov's Glasses" class="item-img">
+          <div class="item-name">Durov’s Glasses</div>
+          <div class="item-tag">Epic</div>
+        </div>
+
+        <div class="item-card rare">
+          <div class="item-price">200 ⭐</div>
+          <img src="images/board.png.jpg" alt="Surge Board" class="item-img">
+          <div class="item-name">Surge Board</div>
+          <div class="item-tag">Rare</div>
+        </div>
+
+        <div class="item-card uncommon">
+          <div class="item-price">100 ⭐</div>
+          <img src="images/shoes.png.jpg" alt="Durov's Shoes" class="item-img">
+          <div class="item-name">Durov’s Shoes</div>
+          <div class="item-tag">Uncommon</div>
+        </div>
+
+        <div class="item-card common" style="grid-column: span 2;">
+          <div class="item-price">40 ⭐</div>
+          <img src="images/coconut.png.jpg" alt="Coconut" class="item-img">
+          <div class="item-name">Coconut</div>
+          <div class="item-tag">Common</div>
+        </div>
       </div>
     </div>
   </div>
@@ -350,7 +465,15 @@
     let completedTasks = new Set();
     let lastFreeOpen = 0;
 
-    // Базова структура віртуальних гравців
+    // Конфігурація Summer Box для майбутньої анімації рулетки
+    const summerBoxItems = [
+      { id: 1, name: "Coconut", price: 40, weight: 55, img: "images/coconut.png.jpg" },
+      { id: 2, name: "Durov’s Shoes", price: 100, weight: 25, img: "images/shoes.png.jpg" },
+      { id: 3, name: "Surge Board", price: 200, weight: 12, img: "images/board.png.jpg" },
+      { id: 4, name: "Durov’s Glasses", price: 350, weight: 6, img: "images/glasses.png.jpg" },
+      { id: 5, name: "Durov’s Cap", price: 1200, weight: 2, img: "images/cap.png.jpg" }
+    ];
+
     let fakeLeaderboard = [
       { name: "Alex_Crypto", stars: 12450, avatar: "🦁" },
       { name: "StarHunter", stars: 9800, avatar: "⚡" },
@@ -398,13 +521,9 @@
       }
     }
 
-    /* ФУНКЦІЇ ДЛЯ ВКЛАДКИ ТОП */
     function renderLeaderboard() {
-      // Формуємо загальний список (гравці + поточний юзер)
       let currentList = [...fakeLeaderboard];
       currentList.push({ name: `@${username}`, stars: userBalance, avatar: "😎", isUser: true });
-      
-      // Сортуємо за спаданням зірок
       currentList.sort((a, b) => b.stars - a.stars);
 
       const podiumContainer = document.getElementById('podiumContainer');
@@ -413,22 +532,14 @@
       podiumContainer.innerHTML = '';
       topListContainer.innerHTML = '';
 
-      // 1. Малюємо Топ 3
       const top1 = currentList[0];
       const top2 = currentList[1];
       const top3 = currentList[2];
 
-      if (top2) {
-        podiumContainer.appendChild(createPodiumCard(top2, 2, 'second', '🥈'));
-      }
-      if (top1) {
-        podiumContainer.appendChild(createPodiumCard(top1, 1, 'first', '👑'));
-      }
-      if (top3) {
-        podiumContainer.appendChild(createPodiumCard(top3, 3, 'third', '🥉'));
-      }
+      if (top2) podiumContainer.appendChild(createPodiumCard(top2, 2, 'second', '🥈'));
+      if (top1) podiumContainer.appendChild(createPodiumCard(top1, 1, 'first', '👑'));
+      if (top3) podiumContainer.appendChild(createPodiumCard(top3, 3, 'third', '🥉'));
 
-      // 2. Малюємо решту місць (від 4-го)
       for (let i = 3; i < currentList.length; i++) {
         const item = currentList[i];
         const row = document.createElement('div');
@@ -457,13 +568,11 @@
       return card;
     }
 
-    // Симуляція оновлення зірок ботів у реальному часі
     setInterval(() => {
       const randomIndex = Math.floor(Math.random() * fakeLeaderboard.length);
       const randomAdd = Math.floor(Math.random() * 50) + 10;
       fakeLeaderboard[randomIndex].stars += randomAdd;
 
-      // Якщо відкрита вкладка ТОП — оновлюємо вигляд
       if (document.getElementById('tab-top').classList.contains('active')) {
         renderLeaderboard();
       }
